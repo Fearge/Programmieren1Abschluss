@@ -2,15 +2,17 @@
 Sidescroller Shooter
 
 TODOs:
--	Grafiken/Hintergründe
--	Leveldesign/scrollen
+-	(Grafiken/Hintergründe)
+-	Leveldesign - Marijan
+-	scrollen - Marijan
 
--	Hugo Bewegung/Grappling Hook
+-	Hugo Bewegung - Johannes
+-	Grappling Hook - Thies
 
 
--	Hugo Kampf – Nahkampf, wenn einfach: Fernkampf
+-	Hugo Kampf – Nahkampf, wenn einfach: Fernkampf - Mario
 
--	SFX
+-	(SFX) - Johannes
 
 -	(Gegner)
 -	(UI)
