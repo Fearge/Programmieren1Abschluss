@@ -13,7 +13,7 @@ TODOs:
 -	Hugo Kampf – Nahkampf, wenn einfach: Fernkampf - Mario
 -	Hitboxen - Mario
 
--	(SFX) - Johannes
+-	SFX - Johannes
 
 -	(Gegner)
 -	UI
