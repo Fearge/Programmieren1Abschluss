@@ -15,8 +15,8 @@ TODOs:
 -	(SFX) - Johannes
 
 -	(Gegner)
--	(UI)
--	(Soundtrack)
+-	UI
+-	Soundtrack
 -	Animationen - Tati
 
 
