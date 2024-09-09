@@ -1,6 +1,7 @@
 import pygame
 from .attack import Attack
 from .object import GameObject
+from ..utils import constants
 class Player(GameObject):
     def __init__(self, x, y, width, height):
         self.width = width
@@ -9,6 +10,7 @@ class Player(GameObject):
         self.speed = 5
         self.attacks = [Attack(200, 200 , 64, 64)]
         self.draw_image = False
+        self.direction = constants.NORTH
 
 
     def update(self, screen):
@@ -21,12 +23,16 @@ class Player(GameObject):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.rect.x -= self.speed
+            direction = constants.WEST
         if keys[pygame.K_RIGHT]:
             self.rect.x += self.speed
+            direction = constants.EAST
         if keys[pygame.K_UP]:
             self.rect.y -= self.speed
+            direction = constants.NORTH
         if keys[pygame.K_DOWN]:
             self.rect.y += self.speed
+            direction = constants.SOUTH
 
 
 

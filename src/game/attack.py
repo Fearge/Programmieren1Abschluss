@@ -1,6 +1,7 @@
 import pygame
 
 from .object import GameObject
+from .enemy import Enemy
 
 class Attack(GameObject):
     def __init__(self, x, y, width, height):
@@ -9,7 +10,7 @@ class Attack(GameObject):
         super().__init__(x, y, width= self.__width, height=self.__height)
         self.__cooldown = 0
         self.__cooldown = 0
-        self.__attacktime = 2000
+        self.__attacktime = 200
         self.__start_time = 0
         self.draw_image = False
 
@@ -38,3 +39,9 @@ class Attack(GameObject):
     def follow_player(self, player):
         self.rect.x = player.rect.x + player.rect.width
         self.rect.y = player.rect.y
+
+    def collision_checks(self):
+        for sprite in self.all_sprites:
+            if isinstance(sprite, Enemy) and self.rect.colliderect(sprite.rect):
+                sprite.reduce_health(10)  # Reduce health by 10 or any other value
+                self.kill()  # Remove the attack from the group
