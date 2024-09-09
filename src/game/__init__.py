@@ -3,7 +3,7 @@ import pygame
 from .object import GameObject
 from .player import Player
 from .attack import Attack
-
+#####
 class Game:
     def __init__(self, screen):
         self.screen = screen
