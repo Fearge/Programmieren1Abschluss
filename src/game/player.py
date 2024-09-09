@@ -1,20 +1,22 @@
 import pygame
 from .attack import Attack
 from .object import GameObject
-from ..utils import constants
+#from utils import constants
 class Player(GameObject):
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, health=100):
         self.width = width
         self.height = height
+        self.health = health
         super().__init__(x, y, width=self.width, height=self.height)
         self.speed = 5
-        self.attacks = [Attack(200, 200 , 64, 64)]
+        self.attacks = [Attack(200, 200 , 64, 64,self)]
         self.draw_image = False
-        self.direction = constants.NORTH
+       # self.direction = constants.NORTH
 
 
     def update(self, screen):
         super().update()
+        #self.draw_health_bar(screen)
 
 
         #if keys[pygame.K_SPACE]:
@@ -23,20 +25,16 @@ class Player(GameObject):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.rect.x -= self.speed
-            direction = constants.WEST
+            #direction = constants.WEST
         if keys[pygame.K_RIGHT]:
             self.rect.x += self.speed
-            direction = constants.EAST
+            #direction = constants.EAST
         if keys[pygame.K_UP]:
             self.rect.y -= self.speed
-            direction = constants.NORTH
+            #direction = constants.NORTH
         if keys[pygame.K_DOWN]:
             self.rect.y += self.speed
-            direction = constants.SOUTH
-
-
-
-
+           # direction = constants.SOUTH
 
     def collision_checks(self):
         if self.rect.x < 0 or self.rect.x > 800 or \
@@ -46,6 +44,6 @@ class Player(GameObject):
 
     def attack(self,attack):
         attack.start_attack()
-        attack.follow_player(self)
+       # attack.follow_player(self)
 
 

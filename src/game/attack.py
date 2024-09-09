@@ -4,28 +4,18 @@ from .object import GameObject
 from .enemy import Enemy
 
 class Attack(GameObject):
-    def __init__(self, x, y, width, height):
+    def __init__(self, x, y, width, height, player):
         self.__width = width
         self.__height = height
+        self.__player = player
         super().__init__(x, y, width= self.__width, height=self.__height)
-        self.__cooldown = 0
         self.__cooldown = 0
         self.__attacktime = 200
         self.__start_time = 0
-        self.draw_image = False
-
-
-    @property
-    def  cooldown(self):
-        return self.__cooldown
 
     @property
     def attacktime(self):
         return self.__attacktime
-
-    @attacktime.setter
-    def attacktime(self, value):
-        self.attacktime = value
 
     def start_attack(self):
         self.__start_time = pygame.time.get_ticks()
@@ -33,6 +23,7 @@ class Attack(GameObject):
 
     def update(self,screen):
         super().update()
+        self.follow_player(self.__player)
         if pygame.time.get_ticks() - self.__start_time > self.attacktime:
             self.kill()
 

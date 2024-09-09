@@ -37,6 +37,7 @@ class Game:
     def update(self):
         self.all_sprites.update(self.screen)
 
+
     def render(self):
         self.screen.fill((255, 255, 255))  # White background
         self.all_sprites.draw(self.screen)
