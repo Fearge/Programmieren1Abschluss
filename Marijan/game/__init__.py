@@ -1,9 +1,13 @@
 import pygame
+from pygame.examples.go_over_there import screen
+
+from .object import GameObject
 from .player import Player
 from .enemy import Enemy
 from .physics import PhysicsEngine
 from .platform import Platform
 from .camera import Camera
+from .attack import Attack
 
 
 class Game:
@@ -14,6 +18,7 @@ class Game:
         self.player_sprites = pygame.sprite.Group()
         self.platform_sprites = pygame.sprite.Group()
         self.all_sprites = pygame.sprite.Group()
+        self.attack_sprites = pygame.sprite.Group()
         self.init()
 
     def init(self):
@@ -22,9 +27,10 @@ class Game:
         self.spawn_player()
 
     def update(self):
-        self.platform_sprites.update()
+        self.all_sprites.update(screen = self.screen)
+        """self.platform_sprites.update()
         self.player_sprites.update(screen=self.screen)
-        self.enemy_sprites.update(screen=self.screen)
+        self.enemy_sprites.update(screen=self.screen)"""
         self.camera.update(self.player_sprites.sprites()[0])  # Assuming one player
 
         # Adjust platform positions based on player velocity
@@ -34,7 +40,7 @@ class Game:
             platform.rect.x -= player_velocity.x
             platform.rect.y -= player_velocity.y
 
-        self.logic()
+        #self.logic()
 
     def render(self, renderer):
         renderer.render_background()
@@ -44,17 +50,17 @@ class Game:
 
     def spawn_enemies(self):
         while len(self.enemy_sprites) < 10:
-            enemy = Enemy(x=10, y=100, width=30, height=30)
+            enemy = Enemy(x=500, y=100, width=30, height=30)
             self.enemy_sprites.add(enemy)
             self.all_sprites.add(enemy)
 
-    def logic(self):
+    """def logic(self):
         if len(self.enemy_sprites) < 10:
             self.spawn_enemies()
         if len(self.player_sprites) < 1:
             pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"reason": "game_over"}))
             self.reset_game()
-            print("game_over")
+            print("game_over")"""
 
     def spawn_player(self):
         player = Player(x=100, y=100, width=50, height=50)
@@ -75,6 +81,13 @@ class Game:
     def handle_events(self, event):
         if len(self.player_sprites) < 1:
             return 'end'
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player = self.player_sprites.sprites()[0]
+                attack = Attack(player.rect.x, player.rect.y, 64, 64, player)
+                self.all_sprites.add(attack)
+                player.attack(attack)
+        return None
 
     def render(self, renderer):
         renderer.render_background()

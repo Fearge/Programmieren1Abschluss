@@ -3,7 +3,7 @@ import pygame
 from .object import GameObject
 from .player import Player
 from .attack import Attack
-from .enemy import Enemy
+from Marijan.game.enemy import Enemy
 
 class Game:
     def __init__(self, screen):

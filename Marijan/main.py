@@ -38,12 +38,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            # Check for user.EVENTS
-            elif event.type == pygame.USEREVENT:
-                if event.dict.get("reason") == "enemy_killed":
-                    score += 1
-                elif event.dict.get("reason") == "game_over":
-                    current_screen = "end"
             # Check for game.STATE
             elif current_screen == "start":
                 result = start_screen.handle_events(event)

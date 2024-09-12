@@ -7,5 +7,5 @@ class Platform(GameObject):
         self.image.fill((0, 255, 255))
         self.all_collision_objects.add(self)
 
-    def update(self):
+    def update(self, screen = None):
         super().update()

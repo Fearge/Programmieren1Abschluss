@@ -1,6 +1,7 @@
 import pygame
 from .object import GameObject
 from .physics import PhysicsEngine
+from .attack import Attack
 
 class Player(GameObject):
     def __init__(self, x, y, width, height):
@@ -15,7 +16,6 @@ class Player(GameObject):
         # Add a Score
         self.score = 0
 
-
     def update(self, screen):
         # Call all .update() logic from GameObject - Important!
         super().update()
@@ -29,7 +29,6 @@ class Player(GameObject):
             self.physics.velocity.x = 4 * self.speed
         if keys[pygame.K_w] and self.physics.is_grounded():
             # Object can only jump if it has contact to the floor
-            print("is grounded and jumps")
             self.physics.velocity.y += -4*self.speed
         if keys[pygame.K_s]:
             self.rect.y += self.speed
@@ -80,3 +79,6 @@ class Player(GameObject):
         # fire event
         pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"reason": "player_died"}))
 
+    def attack(self,attack):
+        attack.start_attack()
+       # attack.follow_player(self)

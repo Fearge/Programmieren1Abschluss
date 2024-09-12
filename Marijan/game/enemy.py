@@ -1,20 +1,32 @@
-import random
+import pygame
 from .object import GameObject
 
 class Enemy(GameObject):
-    def __init__(self, x, y, width, height):
-        super().__init__(x=x, y=y, width=width, height=height)
-        self.all_enemies.add(self)
-        self.image.fill((255, 0, 0))  # Red color
-        self.speed = 0
-        print("Enemy spawned")
+    def __init__(self, x, y, width, height, health=100):
+        self.width = width
+        self.height = height
+        self.health = health
+        super().__init__(x, y, width=self.width, height=self.height)
+
+    def reduce_health(self, amount):
+        self.health -= amount
+        if self.health <= 0:
+            self.kill()  # Remove the enemy from the group
+            print("Enemy died")
+
+    def draw_health_bar(self, screen):
+        # Calculate health bar dimensions
+        bar_width = self.width
+        bar_height = 5
+        fill = (self.health / 100) * bar_width
+        outline_rect = pygame.Rect(self.rect.x, self.rect.y + 10, bar_width, bar_height)
+        fill_rect = pygame.Rect(self.rect.x, self.rect.y + 10, fill, bar_height)
+
+        # Draw health bar
+        pygame.draw.rect(screen, (255, 0, 0), fill_rect)
+        pygame.draw.rect(screen, (0, 0, 0), outline_rect, 1)
 
     def update(self, screen):
-        self.rect.x += self.speed + random.randint(-2, 3)
-        self.rect.y += self.speed + random.randint(-3, 3)
-        # Check if the enemy is out of scope
-        if self.rect.x < 0 or self.rect.x > screen.get_size()[0] or \
-                self.rect.y < 0 or self.rect.y > screen.get_size()[1]:
-            self.kill()  # Remove the player from the group
-            print(f"{self} was killed")
-
+        # Add enemy-specific update logic here
+        super().update()
+        self.draw_health_bar(screen)
