@@ -49,3 +49,4 @@ class Game:
         for e in pg.event.get():
             if e.type == pg.QUIT:
                 self.quit()
+            self.screen.player.handle_events(e)

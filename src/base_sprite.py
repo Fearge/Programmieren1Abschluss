@@ -60,6 +60,7 @@ class Character(AnimatedSprite):
 		self.vel = vec(0, 0)
 		self.acc = vec(0, 0)
 
+
 	def move(self):
 		pass
 
@@ -85,3 +86,5 @@ class Character(AnimatedSprite):
 
 		if self.vel.y > 10:
 			self.vel.y = 10
+
+

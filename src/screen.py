@@ -4,7 +4,7 @@ from os import path
 from constants import *
 from map import TiledMap, Camera
 from sprites import Obstacle, Player
-
+from src.sprites import Enemy
 
 vec = pg.math.Vector2
 
@@ -36,6 +36,9 @@ def collide_with_obstacles(character, hit):
 		character.vel.x = 0
 		character.pos.x = hit.rect.left - character.rect.width/2 - 1
 
+def collide_with_enemies(player, hit):
+	player.kill()
+
 
 class Screen:
 	def __init__(self, game):
@@ -52,6 +55,7 @@ class Screen:
 	def new(self):
 		# sprite groups
 		self.all_sprites = pg.sprite.Group()
+		self.enemies = pg.sprite.Group()
 		self.obstacles = pg.sprite.Group()
 
 		for obj in self.map.tmx_data.objects:
@@ -60,6 +64,9 @@ class Screen:
 				self.player = Player(self, obj_midbottom, self.all_sprites)
 			elif obj.name == 'obstacle':
 				Obstacle((obj.x, obj.y), (obj.width, obj.height), self.obstacles)
+			elif obj.name == 'melee_enemy':
+				enemy = Enemy(self, obj_midbottom, self.enemies)
+				self.all_sprites.add(enemy)
 
 		self.camera = Camera(self.game, self.map.width, self.map.height)
 
@@ -79,6 +86,8 @@ class Screen:
 		self.game.surface.blit(self.map_img, self.camera.apply(self.map))
 		self.camera.draw(self.game.surface, self.all_sprites)
 
+		for attack in self.player.attacks:
+			self.game.surface.blit(attack.image, self.camera.apply(attack))
 		pg.display.flip()
 
 	def check_collisions(self):
@@ -88,3 +97,9 @@ class Screen:
 		if hits:
 			for hit in hits:
 				collide_with_obstacles(self.player, hit)
+
+		#collisions with enemies
+		hits = pg.sprite.spritecollide(self.player, self.enemies, False)
+		if hits:
+			for hit in hits:
+				collide_with_enemies(self.player, hit)

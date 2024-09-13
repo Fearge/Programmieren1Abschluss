@@ -1,10 +1,11 @@
+from shutil import posix
+
 import pygame as pg
 from os import path
 
 from constants import *
-from base_sprite import Character
+from base_sprite import *
 from spritesheet import Spritesheet, Animation
-
 
 class Player(Character):
 	def __init__(self, screen, pos, *groups):
@@ -12,6 +13,8 @@ class Player(Character):
 		self.screen = screen
 		self.pos = pos
 		self.jump_release = 0
+		self.attacks = pg.sprite.Group()
+
 
 		# image
 		self.load()
@@ -138,9 +141,22 @@ class Player(Character):
 			self.jump_release += 1
 
 
+	def handle_events(self, event):
+		if event.type == pg.KEYDOWN:
+			if event.key == pg.K_SPACE:
+				attack = Attack(self.rect.midright, 10, True, self.attacks)
+				attack.align(self)
+				print('attack')
+
 	def update(self):
 		super().update(1/self.screen.game.fps)
 		self.animate()
+		for attack in self.attacks:
+			if attack.followPlayer:
+				attack.align(self)
+
+		self.attacks.update(1/self.screen.game.fps)
+
 
 		# update properties
 		self.width = self.rect.right - self.rect.left
@@ -161,3 +177,69 @@ class Obstacle(pg.sprite.Sprite):
 		self.y = pos[1]
 		self.rect.x = pos[0]
 		self.rect.y = pos[1]
+
+class Enemy(Character):
+	def __init__(self, screen, pos, *groups):
+		super().__init__(pos, 10 ,groups)
+		self.screen = screen
+		self.pos = pos
+
+		self.load()
+		#self.image = self.active_anim.get_frame(0)
+		self.rect = self.image.get_rect()
+		self.rect.midbottom = pos
+		self.isPlayerNear = True
+
+	def load(self):
+		self.image = pg.image.load(path.join('assets','img','title_bg.jpg')).convert_alpha()
+		self.image = pg.transform.scale(self.image, (100, 100))
+
+	def move(self):
+		pass
+
+	def update(self):
+		super().update(1/self.screen.game.fps)
+
+
+
+class Attack(AnimatedSprite):
+	def __init__(self, pos, damage,followPlayer, *groups):
+		super().__init__(groups)
+
+		# properties
+		self.pos = vec(pos)
+		self.damage = damage
+		self.followPlayer = followPlayer
+		self.vel = vec(0, 0)
+		self.acc = vec(0, 0)
+		self.attack_duration = 0
+		self.cooldown = 0
+
+		self.rect = self.image.get_rect()
+		self.rect.center = self.pos
+
+		self.load()
+
+	def load(self):
+		self.image = pg.image.load(path.join('assets','img','title_bg.jpg')).convert_alpha()
+		self.image = pg.transform.scale(self.image, (100, 100))
+		#spritesheet = Spritesheet(path.join(self.screen.game.img_dir, 'batman_spritesheet.png'), bg=(34, 177, 76))
+
+	def animate(self):
+		pass
+
+	def align(self, player):
+		if player.direction == 'R':
+			self.rect.center = player.pos + (player.rect.width, -player.rect.height/2)
+		elif player.direction == 'L':
+			self.rect.center = player.pos - (player.rect.width, player.rect.height/2)
+		self.pos = player.pos
+
+	def update(self, dt):
+		super().update(dt)
+		if self.alive():
+			self.attack_duration += 1
+			if self.attack_duration > 100:
+				self.kill()
+				print('killed')
+		pass
