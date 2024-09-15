@@ -1,3 +1,4 @@
+from logging import currentframe
 from shutil import posix
 
 import pygame as pg
@@ -92,15 +93,6 @@ class Player(Character):
 			else:
 				self.vel.x = 0
 
-		if self.active_name == 'batarang_throw':
-			if self.active_anim.get_frame_index(self.elapsed_time) > 1:
-				if self.shoot_count == 0:
-					if self.direction == 'R':
-						self.screen.create_bullet(self.rect.midright, 1, PLAYER_BULLET_DAMAGE, self.screen.player_bullets, self.bullet_animation)
-					elif self.direction == 'L':
-						self.screen.create_bullet(self.rect.midleft, -1, PLAYER_BULLET_DAMAGE, self.screen.player_bullets, self.bullet_animation)
-					self.shoot_count += 1
-
 			if self.is_animation_finished():
 				self.set_active_animation("standing")
 				self.shoot_count = 0
@@ -117,16 +109,16 @@ class Player(Character):
 
 	def move(self):
 		keys = pg.key.get_pressed()
-		
+
 		# horizontal movement
 		if keys[pg.K_a]:
 			self.direction = 'L'
-			if not self.attack_count > 0 and not self.active_name == 'batarang_throw':
+			if not self.attack_count > 0:
 				self.acc.x = -PLAYER_ACC
 		
 		elif keys[pg.K_d]:
 			self.direction = 'R'
-			if not self.attack_count > 0 and not self.active_name == 'batarang_throw':
+			if not self.attack_count > 0:
 				self.acc.x = PLAYER_ACC
 
 		# jumping
@@ -144,23 +136,23 @@ class Player(Character):
 	def handle_events(self, event):
 		if event.type == pg.KEYDOWN:
 			if event.key == pg.K_SPACE:
-				attack = Attack(self.rect.midright, 10, True, self.attacks)
+				attack = Attack(self.screen, self.rect.midright, 10, True, self.attacks)
 				attack.align(self)
 				print('attack')
 
 	def update(self):
 		super().update(1/self.screen.game.fps)
+		self.attacks.update()
 		self.animate()
 		for attack in self.attacks:
 			if attack.followPlayer:
 				attack.align(self)
 
-		self.attacks.update(1/self.screen.game.fps)
 
 
 		# update properties
-		self.width = self.rect.right - self.rect.left
-		self.height = self.rect.top - self.rect.bottom
+		#self.width = self.rect.right - self.rect.left
+		#self.height = self.rect.top - self.rect.bottom
 
 		self.rect.midbottom = self.pos
 
@@ -187,26 +179,32 @@ class Enemy(Character):
 		self.load()
 		#self.image = self.active_anim.get_frame(0)
 		self.rect = self.image.get_rect()
-		self.rect.midbottom = pos
-		self.isPlayerNear = True
+		self.vel.x = 1
+		self.current_tick = 0
 
 	def load(self):
 		self.image = pg.image.load(path.join('assets','img','title_bg.jpg')).convert_alpha()
 		self.image = pg.transform.scale(self.image, (100, 100))
 
 	def move(self):
-		pass
+		self.current_tick += 1
+		#self.vel.x = 1
+		if self.current_tick % 100 == 0:
+			self.vel.x = -self.vel.x
 
-	def update(self):
+		self.acc.x = self.vel.x * 0.12
+
+	def update(self, dt = 1):
 		super().update(1/self.screen.game.fps)
-
+		self.rect.midbottom = self.pos
 
 
 class Attack(AnimatedSprite):
-	def __init__(self, pos, damage,followPlayer, *groups):
+	def __init__(self, screen, pos, damage, followPlayer, *groups):
 		super().__init__(groups)
 
 		# properties
+		self.screen = screen
 		self.pos = vec(pos)
 		self.damage = damage
 		self.followPlayer = followPlayer
@@ -215,18 +213,26 @@ class Attack(AnimatedSprite):
 		self.attack_duration = 0
 		self.cooldown = 0
 
+
+		self.load()
+		self.image = self.active_anim.get_frame(0)
 		self.rect = self.image.get_rect()
 		self.rect.center = self.pos
 
-		self.load()
-
 	def load(self):
-		self.image = pg.image.load(path.join('assets','img','title_bg.jpg')).convert_alpha()
-		self.image = pg.transform.scale(self.image, (100, 100))
+		#self.image = pg.image.load(path.join('assets','img','title_bg.jpg')).convert_alpha()
+		#self.image = pg.transform.scale(self.image, (100, 100))
 		#spritesheet = Spritesheet(path.join(self.screen.game.img_dir, 'batman_spritesheet.png'), bg=(34, 177, 76))
 
+		spritesheet = Spritesheet(path.join(self.screen.game.img_dir, 'batman_spritesheet.png'), bg=(34, 177, 76))
+
+		walking_frames = [[22, 346, 62, 55], [88, 348, 65, 49], [160, 345, 65, 54], [238, 344, 53, 56], \
+						  [296, 338, 60, 57], [365, 342, 63, 51], [433, 343, 65, 52], [503, 343, 58, 55]]
+		walking_anim = spritesheet.get_animation(walking_frames, 0.12, Animation.PlayMode.LOOP, scale=1.2)
+		self.store_animation('walking', walking_anim)
+
 	def animate(self):
-		pass
+		self.image = self.active_anim.get_frame(self.elapsed_time)
 
 	def align(self, player):
 		if player.direction == 'R':
@@ -235,9 +241,10 @@ class Attack(AnimatedSprite):
 			self.rect.center = player.pos - (player.rect.width, player.rect.height/2)
 		self.pos = player.pos
 
-	def update(self, dt):
-		super().update(dt)
+	def update(self):
+		super().update(1/self.screen.game.fps)
 		if self.alive():
+			self.animate()
 			self.attack_duration += 1
 			if self.attack_duration > 100:
 				self.kill()

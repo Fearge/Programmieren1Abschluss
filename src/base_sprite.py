@@ -14,6 +14,13 @@ class AnimatedSprite(pg.sprite.Sprite):
 		self.active_name = ""
 		self.animation_storage = {}
 
+
+	def load(self):
+		pass
+
+	def animate(self):
+		pass
+
 	def store_animation(self, name, anim):
 		self.animation_storage[name] = anim
 

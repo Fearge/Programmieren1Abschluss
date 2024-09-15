@@ -27,6 +27,7 @@ class Camera:
         self.width = width
         self.height = height
         self.camera = pg.Rect(0, 0, width, height)
+        self.lerp_factor = 0.1
 
     def apply(self, entity):
         return entity.rect.move(self.camera.topleft)
@@ -34,9 +35,14 @@ class Camera:
     def draw(self, surface, group):
         for sprite in group:
             surface.blit(sprite.image, self.apply(sprite))
+    # linear interpolation
+    def lerp(self, start, end, factor):
+        return start + factor * (end - start)
 
     def update(self, target):
-        x = max(-self.width + self.game.width, min(0, int(self.game.width/2) - target.rect.centerx))
-        y = max(-self.height + self.game.height, min(0, int(self.game.height/2) - target.rect.centery))
+        target_x = max(-self.width + self.game.width, min(0, int(self.game.width / 2) - target.rect.centerx))
+        target_y = max(-self.height + self.game.height, min(0, int(self.game.height / 2) - target.rect.centery))
 
-        self.camera = pg.Rect(x, y, self.width, self.height)
+        # Smoothly interpolate the camera position
+        self.camera.x = self.lerp(self.camera.x, target_x, self.lerp_factor)
+        self.camera.y = self.lerp(self.camera.y, target_y, self.lerp_factor)
