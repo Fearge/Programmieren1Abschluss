@@ -1,9 +1,6 @@
 import pygame
-
-from .object import GameObject
 from .player import Player
-from .attack import Attack
-from Marijan.game.enemy import Enemy
+from .enemy import Enemy
 
 class Game:
     def __init__(self, screen):
@@ -12,7 +9,7 @@ class Game:
         self.enemy_sprites = pygame.sprite.Group()
         self.player_sprites = pygame.sprite.Group()
         self.platform_sprites = pygame.sprite.Group()
-        self.all_sprites = GameObject.all_sprites
+        self.all_sprites = pygame.sprite.Group()
         self.init()
 
     def init(self):
@@ -20,12 +17,10 @@ class Game:
         self.spawn_enemies()
         # Player
         self.spawn_player()
-        #Attack
-        #self.createAttacks()
 
     def spawn_enemies(self):
         while len(self.enemy_sprites) < 1:
-            enemy = Enemy(x=200, y=100, width=64, height=64)
+            enemy = Enemy(x=10, y=100, width=128, height=128)
             self.enemy_sprites.add(enemy)
             self.all_sprites.add(enemy)
 
@@ -37,8 +32,6 @@ class Game:
     def update(self):
         self.all_sprites.update(self.screen)
 
-
     def render(self):
         self.screen.fill((255, 255, 255))  # White background
         self.all_sprites.draw(self.screen)
-

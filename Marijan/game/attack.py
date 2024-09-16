@@ -1,7 +1,7 @@
 import pygame
 
 from .object import GameObject
-from Marijan.game.enemy import Enemy
+from .enemy import Enemy
 
 class Attack(GameObject):
     def __init__(self, x, y, width, height, player):
@@ -19,7 +19,6 @@ class Attack(GameObject):
 
     def start_attack(self):
         self.__start_time = pygame.time.get_ticks()
-        self.all_sprites.add(self)
 
     def update(self,screen):
         super().update()

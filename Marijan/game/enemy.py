@@ -1,5 +1,5 @@
 import pygame
-from src.game.object import GameObject
+from .object import GameObject
 
 class Enemy(GameObject):
     def __init__(self, x, y, width, height, health=100):
