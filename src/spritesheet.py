@@ -3,9 +3,9 @@ from enum import Enum
 
 
 class Spritesheet:
-	def __init__(self, filename, bg=None):
+	def __init__(self, filename, colorkey=None):
 		self.spritesheet = pg.image.load(filename).convert()
-		self.bg = bg
+		self.colorkey = colorkey
 
 	def get_image(self, frame, scale=None, flip=False):
 		image = self.spritesheet.subsurface(pg.Rect(frame))
@@ -16,8 +16,8 @@ class Spritesheet:
 		if flip:
 			image = pg.transform.flip(image, True, False)
 
-		if self.bg is not None:
-			image.set_colorkey(self.bg)
+		if self.colorkey is not None:
+			image.set_colorkey(self.colorkey)
 
 		return image
 

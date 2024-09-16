@@ -1,5 +1,7 @@
 import pygame as pg
 from constants import *
+from src.spritesheet import Spritesheet
+from os import path
 
 vec = pg.math.Vector2
 

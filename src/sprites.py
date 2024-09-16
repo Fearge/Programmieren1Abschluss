@@ -27,75 +27,34 @@ class Player(Character):
 		self.height = self.rect.top - self.rect.bottom
 
 	def load(self):
-		spritesheet = Spritesheet(path.join(self.screen.game.img_dir, 'batman_spritesheet.png'), bg=(34, 177, 76))
+		spritesheet = Spritesheet(path.join(self.screen.game.img_dir, 'batman_spritesheet.png'), colorkey=(34, 177, 76))
 
-		# MOVEMENT ANIMATIONS
-		# walking animation
-		walking_frames = [[22, 346, 62, 55], [88, 348, 65, 49], [160, 345, 65, 54], [238, 344, 53, 56], \
-			[296, 338, 60, 57], [365, 342, 63, 51], [433, 343, 65, 52], [503, 343, 58, 55]]
-		walking_anim = spritesheet.get_animation(walking_frames, 0.12, Animation.PlayMode.LOOP, scale=1.2)
-		self.store_animation('walking', walking_anim)
+		anmations = {
+			'walking': (WALKING_FRAMES, 0.12, Animation.PlayMode.LOOP),
+			'standing': (STANDING_FRAMES, 0.20, Animation.PlayMode.LOOP),
+			'jumping': (JUMPING_FRAMES, 0.10, Animation.PlayMode.NORMAL),
+			'falling': (FALLING_FRAMES, 0.10, Animation.PlayMode.NORMAL),
+			'landing': (LANDING_FRAMES, 0.10, Animation.PlayMode.NORMAL)
+		}
 
-		# standing animation
-		standing_frames = [(28, 247, 34, 63), (73, 248, 34, 62), (115, 248, 35, 61)]
-		standing_animation = spritesheet.get_animation(standing_frames, 0.20, Animation.PlayMode.LOOP, scale=1.2)
-		self.store_animation('standing', standing_animation)
+		for name, (frames, duration, mode) in anmations.items():
+			anim = spritesheet.get_animation(frames, duration, mode, scale=1.2)
+			self.store_animation(name, anim)
 
-		# jumping animation
-		jumping_frames = [(609, 343, 43, 51), (664, 337, 48, 64), (720, 338, 48, 64)]
-		jumping_animation = spritesheet.get_animation(jumping_frames, 0.10, Animation.PlayMode.NORMAL, scale=1.2)
-		self.store_animation('jumping', jumping_animation)
-
-		# falling animation
-		falling_frames = [(773, 344, 60, 50), (839, 323, 44, 80), (897, 326, 46, 77)]
-		falling_animation = spritesheet.get_animation(falling_frames, 0.10, Animation.PlayMode.NORMAL, scale=1.2)
-		self.store_animation('falling', falling_animation)
-
-		# landing animation
-		landing_frames = [(960, 336, 47, 69), (1023, 362, 47, 43), (1081, 352, 42, 52)]
-		landing_animation = spritesheet.get_animation(landing_frames, 0.10, Animation.PlayMode.NORMAL, scale=1.2)
-		self.store_animation('landing', landing_animation)
-
-		# batarang throw
-		batarang_throw_frames = [(20, 1004, 46, 54), (81, 997, 53, 61), (149, 1004, 82, 54), (239, 1004, 72, 54), (326, 1003, 67, 55)]
-		batarang_throw_animation = spritesheet.get_animation(batarang_throw_frames, 0.10, Animation.PlayMode.NORMAL, scale=1.2)
-		self.store_animation('batarang_throw', batarang_throw_animation)
 
 	def animate(self):
-		if self.active_name == "walking":
-			if self.vel.x == 0:
-				self.set_active_animation("standing")
-
-			if self.vel.y < 0:
-				self.set_active_animation("jumping")
-
-		if self.active_name == "standing":
-			if abs(self.vel.x) > 0:
-				self.set_active_animation("walking")
-
-			if self.vel.y < 0:
-				self.set_active_animation("jumping")
-
-		if self.active_name == "jumping":
-			if self.vel.y > 0:
-				self.set_active_animation("falling")
-
-		if self.active_name == "falling":
-			if self.ground_count > 0:
-				self.set_active_animation("landing")
-
-		if self.active_name == "landing":
-			if self.is_animation_finished():
-				if abs(self.vel.x) > 0:
-					self.set_active_animation("walking")
-				else:
-					self.set_active_animation("standing")
-			else:
-				self.vel.x = 0
-
-			if self.is_animation_finished():
-				self.set_active_animation("standing")
-				self.shoot_count = 0
+		transitions = {
+			"walking": [("standing", self.vel.x == 0), ("jumping", self.vel.y < 0)],
+			"standing": [("walking", abs(self.vel.x) > 0), ("jumping", self.vel.y < 0)],
+			"jumping": [("falling", self.vel.y > 0)],
+			"falling": [("landing", self.ground_count > 0)],
+			"landing": [("walking", self.is_animation_finished() and abs(self.vel.x) > 0),
+						("standing", self.is_animation_finished() and abs(self.vel.x) == 0)]
+		}
+		for new_state, condition in transitions.get(self.active_name, []):
+			if condition:
+				self.set_active_animation(new_state)
+				break
 
 		bottom = self.rect.bottom
 		self.image = self.active_anim.get_frame(self.elapsed_time)
@@ -136,7 +95,7 @@ class Player(Character):
 	def handle_events(self, event):
 		if event.type == pg.KEYDOWN:
 			if event.key == pg.K_SPACE:
-				attack = Attack(self.screen, self.rect.midright, 10, True, self.attacks)
+				attack = Attack(self.screen, 10, True, self.attacks)
 				attack.align(self)
 				print('attack')
 
@@ -211,13 +170,13 @@ class Enemy(Character):
 			self.movement_tick = 0
 			self.stuck_count = 0
 
+		# update previous position
+		self.prev_pos = vec(self.pos)
 
 	def update(self, dt = 1):
 		super().update(1/self.screen.game.fps)
 
 		self.check_stuck()
-		print(f'pos{self.pos} prev pos{self.prev_pos}')
-
 		self.prev_pos = vec(self.pos)
 		self.rect.midbottom = self.pos
 
@@ -226,12 +185,12 @@ class Enemy(Character):
 
 
 class Attack(AnimatedSprite):
-	def __init__(self, screen, pos, damage, followPlayer, *groups):
+	def __init__(self, screen, damage, followPlayer, *groups):
 		super().__init__(groups)
 
 		# properties
 		self.screen = screen
-		self.pos = vec(pos)
+		self.pos = vec(0,0)
 		self.damage = damage
 		self.followPlayer = followPlayer
 		self.vel = vec(0, 0)
@@ -246,14 +205,11 @@ class Attack(AnimatedSprite):
 		self.rect.center = self.pos
 
 	def load(self):
-		#self.image = pg.image.load(path.join('assets','img','title_bg.jpg')).convert_alpha()
-		#self.image = pg.transform.scale(self.image, (100, 100))
-		#spritesheet = Spritesheet(path.join(self.screen.game.img_dir, 'batman_spritesheet.png'), bg=(34, 177, 76))
+		spritesheet = Spritesheet(path.join(self.screen.game.img_dir, 'batman_spritesheet.png'), colorkey=(34, 177, 76))
+		animations = {
+			'walking': (WALKING_FRAMES, 0.12, Animation.PlayMode.LOOP)
+		}
 
-		spritesheet = Spritesheet(path.join(self.screen.game.img_dir, 'batman_spritesheet.png'), bg=(34, 177, 76))
-
-		walking_frames = [[22, 346, 62, 55], [88, 348, 65, 49], [160, 345, 65, 54], [238, 344, 53, 56], \
-						  [296, 338, 60, 57], [365, 342, 63, 51], [433, 343, 65, 52], [503, 343, 58, 55]]
 		walking_anim = spritesheet.get_animation(walking_frames, 0.12, Animation.PlayMode.LOOP, scale=1.2)
 		self.store_animation('walking', walking_anim)
 
