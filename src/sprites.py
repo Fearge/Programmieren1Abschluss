@@ -4,7 +4,7 @@ from shutil import posix
 import pygame as pg
 from os import path
 
-from constants import *
+
 from base_sprite import *
 from spritesheet import Spritesheet, Animation
 
@@ -173,30 +173,56 @@ class Obstacle(pg.sprite.Sprite):
 class Enemy(Character):
 	def __init__(self, screen, pos, *groups):
 		super().__init__(pos, 10 ,groups)
+		# properties
 		self.screen = screen
 		self.pos = pos
+		self.prev_pos = vec(pos)
+		self.stuck_count = 0
+		self.stuck_threshold = 10
 
 		self.load()
 		#self.image = self.active_anim.get_frame(0)
 		self.rect = self.image.get_rect()
-		self.vel.x = 1
-		self.current_tick = 0
+		self.vel.x = ENEMY_VEL
+		self.movement_tick = 0
 
 	def load(self):
 		self.image = pg.image.load(path.join('assets','img','title_bg.jpg')).convert_alpha()
 		self.image = pg.transform.scale(self.image, (100, 100))
 
 	def move(self):
-		self.current_tick += 1
-		#self.vel.x = 1
-		if self.current_tick % 100 == 0:
-			self.vel.x = -self.vel.x
+		self.movement_tick += 1
+		if self.movement_tick % 100 == 0:
+			self.reverse_direction()
 
 		self.acc.x = self.vel.x * 0.12
 
+	def reverse_direction(self):
+		self.vel.x *= -1
+
+	def check_stuck(self):
+		if self.pos == self.prev_pos:
+			self.stuck_count += 1
+		else:
+			self.stuck_count = 0
+
+		if self.stuck_count > self.stuck_threshold:
+			self.vel.x = -ENEMY_VEL
+			self.movement_tick = 0
+			self.stuck_count = 0
+
+
 	def update(self, dt = 1):
 		super().update(1/self.screen.game.fps)
+
+		self.check_stuck()
+		print(f'pos{self.pos} prev pos{self.prev_pos}')
+
+		self.prev_pos = vec(self.pos)
 		self.rect.midbottom = self.pos
+
+
+
 
 
 class Attack(AnimatedSprite):

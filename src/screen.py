@@ -65,8 +65,8 @@ class Screen:
 			elif obj.name == 'obstacle':
 				Obstacle((obj.x, obj.y), (obj.width, obj.height), self.obstacles)
 			elif obj.name == 'melee_enemy':
-				enemy = Enemy(self, obj_midbottom, self.all_sprites)
-				#self.all_sprites.add(enemy)
+				enemy = Enemy(self, obj_midbottom, self.enemies)
+				self.all_sprites.add(enemy)
 
 		self.camera = Camera(self.game, self.map.width, self.map.height)
 
@@ -98,13 +98,13 @@ class Screen:
 			for hit in hits:
 				collide_with_obstacles(self.player, hit)
 
-		#collisions with enemies
+		"""#collisions with enemies
 		hits = pg.sprite.spritecollide(self.player, self.enemies, False)
 		if hits:
-			collide_with_enemies(self.player)
+			collide_with_enemies(self.player)"""
 
 
-		for enemy in self.all_sprites:
+		for enemy in self.enemies:
 			hits = pg.sprite.spritecollide(enemy, self.obstacles, False)
 			if hits:
 				for hit in hits:
