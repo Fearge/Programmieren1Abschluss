@@ -4,7 +4,7 @@ from os import path
 from collisions import *
 from map import TiledMap, Camera
 from sprites import Obstacle, Player
-from src.sprites import Enemy
+from src.sprites import Enemy, MeleeEnemy
 
 vec = pg.math.Vector2
 
@@ -33,7 +33,7 @@ class Screen:
 			elif obj.name == 'obstacle':
 				Obstacle((obj.x, obj.y), (obj.width, obj.height), self.obstacles)
 			elif obj.name == 'melee_enemy':
-				enemy = Enemy(self, obj_midbottom, self.enemies)
+				enemy = MeleeEnemy(self, obj_midbottom, self.enemies)
 				self.all_sprites.add(enemy)
 
 		self.camera = Camera(self.game, self.map.width, self.map.height)

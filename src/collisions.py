@@ -27,5 +27,7 @@ def collide_with_obstacles(character, hit):
 		character.pos.x = hit.rect.left - character.rect.width/2 - 1
 
 def collide_with_enemies(player):
-	player.kill()
+	#player.kill()
+	pass
+
 

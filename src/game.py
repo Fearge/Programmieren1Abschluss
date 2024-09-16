@@ -50,3 +50,7 @@ class Game:
             if e.type == pg.QUIT:
                 self.quit()
             self.screen.player.handle_events(e)
+
+            for enemie in self.screen.enemies:
+                enemie.handle_events(e)
+
