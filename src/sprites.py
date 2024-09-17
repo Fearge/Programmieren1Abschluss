@@ -130,6 +130,7 @@ class Obstacle(pg.sprite.Sprite):
         self.rect.y = pos[1]
 
 class Enemy(Character):
+    _id_counter = 0
     def __init__(self, screen, pos, *groups):
         super().__init__(pos, 10 ,groups)
         # properties
@@ -140,12 +141,13 @@ class Enemy(Character):
         self.stuck_threshold = 10
         self.has_attacked = False
         self.isPlayerNear = False
+        self.id = Enemy._id_counter
+        Enemy._id_counter += 1
 
 
         self.load()
         self.image = self.active_anim.get_frame(0)
         self.rect = self.image.get_rect()
-        self.vel.x = ENEMY_VEL
         self.movement_tick = 0
 
     def load(self):
@@ -162,15 +164,21 @@ class Enemy(Character):
     def animate(self):
         if self.vel.x > 0:
             self.image = self.active_anim.get_frame(self.elapsed_time)
+            self.direction = 'R'
         else:
             self.image = pg.transform.flip(self.active_anim.get_frame(self.elapsed_time), True, False)
+            self.direction = 'L'
 
     # idle animation
     def move(self):
+        #init velocity
+        if self.vel.x == 0:
+            self.vel.x = ENEMY_VEL
+        #moving left and right
         self.movement_tick += 1
         if self.movement_tick % 100 == 0:
             self.vel.x *= -1
-
+        #reverse friction
         self.acc.x = self.vel.x * 0.12
 
     def handle_events(self, event):
@@ -192,8 +200,9 @@ class Enemy(Character):
         self.prev_pos = vec(self.pos)
 
     def is_player_near(self, player, threshold):
-        distance = self.pos.distance_to(player.pos)
-        return distance < threshold
+        if abs(self.pos.y -player.pos.y) < 10:
+            return abs(self.pos.x-player.pos.x) < threshold
+        else: return False
 
     def update(self, dt = 1):
         super().update(1/self.screen.game.fps)
@@ -203,7 +212,7 @@ class Enemy(Character):
         self.prev_pos = vec(self.pos)
 
         if self.is_player_near(self.screen.player, 300):
-            pg.event.post(pg.event.Event(pg.USEREVENT, {'enemy':'near_player'}))
+            pg.event.post(pg.event.Event(pg.USEREVENT, {f'enemy':self.id}))
             self.isPlayerNear = True
         else:
             self.isPlayerNear = False
@@ -215,45 +224,49 @@ class MeleeEnemy(Enemy):
         super().__init__(screen, pos, groups)
         self.attacks = pg.sprite.Group()
         self.attack_cooldown = 0
+        self.isCharging = False
+        self.playerPos = vec(0,0)
 
+    def stop(self):
+        self.vel = (0,0)
 
-    def move(self):
-        if self.isPlayerNear:
-            self.charge(self.screen.player.pos)
-        else:
-            super().move()
-            #self.move()# Idle movement, when player's not near
-        #ddddddddddsuper().move()"""
 
     def charge(self, pos):
         direction = pos - self.pos
         if direction.length() > 0:
             direction = direction.normalize()
-        self.acc.x = direction[0] * ENEMY_VEL
+        self.vel.x = direction[0] * ENEMY_CHARGE
 
     def attack_player(self):
         attack = Attack(self.screen, 10, True, self.attacks)
         attack.align(self)
-        self.charge(self.screen.player.pos)
+        # charge at Player
         self.attack_cooldown = 100
 
     def handle_events(self, event):
         if event.type == pg.USEREVENT:
-            if event.dict.get('enemy') == 'near_player' and self.attack_cooldown == 0:
+            if event.dict.get('enemy') == self.id and self.attack_cooldown == 0:
                 print('player near')
                 self.attack_player()
+                self.isCharging = True
+                self.playerPos = self.screen.player.pos
 
     def update(self):
         super().update()
         self.attacks.update()
+
         for attack in self.attacks:
             if attack.followPlayer:
                 attack.align(self)
+            self.charge(self.playerPos)
+
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
-        else:
-            if self.isPlayerNear:
-                self.charge(self.screen.player.pos)
+
+        if self.isCharging and self.pos.distance_to(self.playerPos) == 0:
+            self.stop()
+            self.isCharging = False
+
 
 class Attack(AnimatedSprite):
     def __init__(self, screen, damage, followPlayer, *groups):
