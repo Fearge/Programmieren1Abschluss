@@ -7,20 +7,36 @@ vec = pg.math.Vector2
 
 
 class AnimatedSprite(pg.sprite.Sprite):
+	COLORKEY = (34, 177, 76)
+	ANIMATIONS = {}
+
 	def __init__(self, *groups):
 		super().__init__(groups)
 
 		# control
-		self.elapsed_time = 0
 		self.active_anim = None
+		self.elapsed_time = 0
 		self.active_name = ""
 		self.animation_storage = {}
-
+		self.transitions = {}
 
 	def load(self):
-		pass
+		spritesheet = Spritesheet(path.join(self.screen.game.img_dir, SPRITESHEET_PATH), colorkey=self.COLORKEY)
+		for name, (frames, duration, mode) in self.ANIMATIONS.items():
+			anim = spritesheet.get_animation(frames, duration, mode, scale=1.2)
+			self.store_animation(name, anim)
 
 	def animate(self):
+		for new_state, condition in self.transitions.get(self.active_name, []):
+			if condition:
+				self.set_active_animation(new_state)
+				break
+		self.image = self.active_anim.get_frame(self.elapsed_time)
+		if hasattr(self, 'direction') and self.direction == 'L':
+			self.image = pg.transform.flip(self.image, True, False)
+		self.rect = self.image.get_rect()
+
+	def handle_transition(self, transitions):
 		pass
 
 	def store_animation(self, name, anim):
@@ -49,9 +65,11 @@ class AnimatedSprite(pg.sprite.Sprite):
 
 	def update(self, dt):
 		self.elapsed_time += dt
+		self.animate()
 
 
 class Character(AnimatedSprite):
+
 	def __init__(self, pos, damage, *groups):
 		super().__init__(groups)
 		
@@ -71,7 +89,10 @@ class Character(AnimatedSprite):
 
 
 	def move(self):
-		pass
+		if self.vel.x > 0:
+			self.direction = 'R'
+		elif self.vel.x < 0:
+			self.direction = 'L'
 
 	def update(self, dt):
 		super().update(dt)

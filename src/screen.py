@@ -4,7 +4,7 @@ from os import path
 from collisions import *
 from map import TiledMap, Camera
 from sprites import Obstacle, Player
-from src.sprites import Enemy, MeleeEnemy
+from src.enemy import MeleeEnemy
 
 vec = pg.math.Vector2
 
