@@ -15,6 +15,7 @@ class Player(Character):
         self.pos = pos
         self.jump_release = 0
         self.attacks = pg.sprite.Group()
+        self.attack_cooldown = 0
 
 
         # image
@@ -89,13 +90,17 @@ class Player(Character):
         else:
             self.jump_release += 1
 
+    def attack(self):
+        attack = Attack(self.screen, 10, True, self.attacks)
+        attack.align(self)
+        print('attack')
 
     def handle_events(self, event):
         if event.type == pg.KEYDOWN:
-            if event.key == pg.K_SPACE:
-                attack = Attack(self.screen, 10, True, self.attacks)
-                attack.align(self)
-                print('attack')
+            if event.key == pg.K_SPACE and self.attack_cooldown == 0:
+                self.attack()
+                self.attack_cooldown = PLAYER_ATT_COOLDOWN
+
 
     def update(self):
         super().update(1/self.screen.game.fps)
@@ -104,6 +109,9 @@ class Player(Character):
         for attack in self.attacks:
             if attack.followPlayer:
                 attack.align(self)
+
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= 1
 
         self.rect.midbottom = self.pos
 
@@ -165,6 +173,9 @@ class Enemy(Character):
 
         self.acc.x = self.vel.x * 0.12
 
+    def handle_events(self, event):
+        pass
+
 
     def check_stuck(self):
         if self.pos == self.prev_pos:
@@ -203,33 +214,46 @@ class MeleeEnemy(Enemy):
     def __init__(self, screen, pos, *groups):
         super().__init__(screen, pos, groups)
         self.attacks = pg.sprite.Group()
-        self.attack = Attack(screen, 10, False, self.attacks)
+        self.attack_cooldown = 0
+
 
     def move(self):
-        if self.isPlayerNear and self.attack.cooldown == 0:
-            direction = self.screen.player.pos - self.pos
-            if direction.length() > 0:
-                direction = direction.normalize()
-            self.vel.x = direction[0] * ENEMY_CHARGE
-            self.vel.y += ENEMY_VEL
+        if self.isPlayerNear:
+            self.charge(self.screen.player.pos)
         else:
             super().move()
             #self.move()# Idle movement, when player's not near
+        #ddddddddddsuper().move()"""
+
+    def charge(self, pos):
+        direction = pos - self.pos
+        if direction.length() > 0:
+            direction = direction.normalize()
+        self.acc.x = direction[0] * ENEMY_VEL
 
     def attack_player(self):
-        self.attack.align(self)
+        attack = Attack(self.screen, 10, True, self.attacks)
+        attack.align(self)
+        self.charge(self.screen.player.pos)
+        self.attack_cooldown = 100
 
     def handle_events(self, event):
         if event.type == pg.USEREVENT:
-            if event.dict.get('enemy') == 'near_player' and not self.has_attacked:
+            if event.dict.get('enemy') == 'near_player' and self.attack_cooldown == 0:
+                print('player near')
                 self.attack_player()
-                self.has_attacked = True
 
     def update(self):
         super().update()
         self.attacks.update()
         for attack in self.attacks:
-            self.attack_player()
+            if attack.followPlayer:
+                attack.align(self)
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= 1
+        else:
+            if self.isPlayerNear:
+                self.charge(self.screen.player.pos)
 
 class Attack(AnimatedSprite):
     def __init__(self, screen, damage, followPlayer, *groups):
@@ -243,8 +267,6 @@ class Attack(AnimatedSprite):
 
         self.attack_length = 50
         self.__attack_duration = 0
-        self.cooldown = 0
-        self.__cooldown_timer = 0
 
         self.load()
         self.image = self.active_anim.get_frame(0)
@@ -265,16 +287,10 @@ class Attack(AnimatedSprite):
 
     def align(self, entity):
         if entity.direction == 'R':
-            self.rect.center = entity.pos + (entity.rect.width, -entity.rect.height / 2)
+            self.rect.center = entity.pos + (entity.rect.width/2, -entity.rect.height / 2)
         elif entity.direction == 'L':
             self.rect.center = entity.pos - (entity.rect.width, entity.rect.height / 2)
         self.pos = entity.pos
-
-    def is_ready(self):
-        return self.__cooldown_timer == 0
-
-    def reset_cooldown(self):
-        self.__cooldown_timer = self.cooldown
 
     def update(self):
         super().update(1 / self.screen.game.fps)
@@ -284,6 +300,4 @@ class Attack(AnimatedSprite):
         if self.__attack_duration > self.attack_length:
             self.kill()
             print('killed')
-        if self.__cooldown_timer > 0:
-            self.__cooldown_timer -= 1
 

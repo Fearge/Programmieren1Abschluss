@@ -25,6 +25,7 @@ class Screen:
 		self.all_sprites = pg.sprite.Group()
 		self.enemies = pg.sprite.Group()
 		self.obstacles = pg.sprite.Group()
+		self.attacks = pg.sprite.Group()
 
 		for obj in self.map.tmx_data.objects:
 			obj_midbottom = vec(obj.x + obj.width/2, obj.y + obj.height)
@@ -56,6 +57,11 @@ class Screen:
 
 		for attack in self.player.attacks:
 			self.game.surface.blit(attack.image, self.camera.apply(attack))
+
+		for enemy in self.enemies:
+			for attack in enemy.attacks:
+				self.game.surface.blit(attack.image, self.camera.apply(attack))
+
 		pg.display.flip()
 
 	def check_collisions(self):
