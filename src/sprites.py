@@ -17,6 +17,7 @@ class Player(Character):
         'falling': (FALLING_FRAMES, 0.10, NORMAL),
         'landing': (LANDING_FRAMES, 0.10, NORMAL)
     }
+    _id_counter = 0
     def __init__(self, screen, pos, *groups):
         super().__init__(pos, PLAYER_DAMAGE, groups)
         self.screen = screen
@@ -24,7 +25,8 @@ class Player(Character):
         self.jump_release = 0
         self.attacks = pg.sprite.Group()
         self.attack_cooldown = 0
-
+        self.id = Player._id_counter
+        Player._id_counter += 1
 
         # image
         self.load()
@@ -45,6 +47,9 @@ class Player(Character):
                         ("standing", self.is_animation_finished() and abs(self.vel.x) == 0)]
         }
         super().animate()
+
+    def __str__(self):
+        return f'Player_{self.id}'
 
     def move(self):
         keys = pg.key.get_pressed()
@@ -72,7 +77,7 @@ class Player(Character):
         super().move()
 
     def attack(self):
-        attack = Attack(self.screen, 10, True, self.attacks)
+        attack = Attack(self.screen, 10, True,self.__str__(), self.screen.attacks)
         attack.align(self)
         print('attack')
 
@@ -85,10 +90,9 @@ class Player(Character):
 
     def update(self):
         super().update(1/self.screen.game.fps)
-        self.attacks.update()
-        #self.animate()
-        for attack in self.attacks:
-            if attack.followPlayer:
+        for attack in self.screen.attacks:
+            if attack.followPlayer and attack.entity == self.__str__():
+                attack.update()
                 attack.align(self)
 
         if self.attack_cooldown > 0:
@@ -115,7 +119,7 @@ class Attack(AnimatedSprite):
     ANIMATIONS = {
         'walking': (WALKING_FRAMES, 0.12, LOOP)
     }
-    def __init__(self, screen, damage, followPlayer, *groups):
+    def __init__(self, screen, damage, followPlayer, entity, *groups):
         super().__init__(groups)
 
         # properties
@@ -123,6 +127,7 @@ class Attack(AnimatedSprite):
         self.pos = vec(0, 0)
         self.damage = damage
         self.followPlayer = followPlayer
+        self.entity = entity
 
         self.attack_length = 50
         self.__attack_duration = 0
@@ -134,15 +139,13 @@ class Attack(AnimatedSprite):
 
     def align(self, entity):
         if entity.direction == 'R':
-            self.rect.center = entity.pos + (entity.rect.width/2, -entity.rect.height / 2)
+            self.rect.center = entity.pos + (entity.rect.width, -entity.rect.height / 2)
         elif entity.direction == 'L':
             self.rect.center = entity.pos - (entity.rect.width, entity.rect.height / 2)
         self.pos = entity.pos
 
     def update(self):
         super().update(1 / self.screen.game.fps)
-
-        self.animate()
         self.__attack_duration += 1
         if self.__attack_duration > self.attack_length:
             self.kill()

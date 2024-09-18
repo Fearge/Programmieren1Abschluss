@@ -14,11 +14,10 @@ class Enemy(Character):
         Enemy._id_counter += 1
 
         self.stuck_count = 0
-        self.stuck_threshold = 10
+        self.stuck_threshold = 100
         self.range_threshold = 100
         self.isPlayerNear = False
 
-        self.attacks = pg.sprite.Group()
         self.attack_cooldown = 0
 
         self.load()
@@ -26,18 +25,23 @@ class Enemy(Character):
         self.rect = self.image.get_rect()
         self.movement_tick = 0
 
+    def __str__(self):
+        return f'enemy_{self.id}'
 
     # idle animation
     def move(self):
-         #init velocity
-        if self.vel.x == 0:
+        #init velocity and acceleration
+        self.acc.x = self.vel.x * 0.12
+        if self.direction == 'R':
             self.vel.x = ENEMY_VEL
-        #moving left and right
+        else: self.vel.x = -ENEMY_VEL
+
+        if self.direction == 'L':
+                self.vel.x = -ENEMY_VEL
+            #moving left and right
         self.movement_tick += 1
         if self.movement_tick % 100 == 0:
             self.vel.x *= -1
-        #reverse friction
-        self.acc.x = self.vel.x * 0.12
         super().move()
 
     def handle_events(self, event):
@@ -46,6 +50,7 @@ class Enemy(Character):
     def stop(self):
         self.vel = vec(0,0)
 
+
     def check_stuck(self):
         if self.pos == self.prev_pos:
             self.stuck_count += 1
@@ -53,7 +58,7 @@ class Enemy(Character):
             self.stuck_count = 0
 
         if self.stuck_count > self.stuck_threshold:
-            self.vel.x = -ENEMY_VEL
+            self.reverse_direction()
             self.movement_tick = 0
             self.stuck_count = 0
 
@@ -69,7 +74,6 @@ class Enemy(Character):
         super().update(1/self.screen.game.fps)
 
         self.check_stuck()
-        #self.animate()
         self.prev_pos = vec(self.pos)
 
         if self.is_player_near(self.screen.player, self.range_threshold):
@@ -88,6 +92,10 @@ class MeleeEnemy(Enemy):
         super().__init__(screen, pos, groups)
         self.range_threshold = 500
 
+    def move(self):
+        if not self.isCharging:
+            super().move()
+
     def charge(self, pos):
         direction = pos - self.pos
         if direction.length() > 0:
@@ -95,7 +103,7 @@ class MeleeEnemy(Enemy):
         self.vel.x = direction[0] * ENEMY_CHARGE
 
     def attack_player(self):
-        attack = Attack(self.screen, 10, True, self.attacks)
+        attack = Attack(self.screen, 10, True, self.__str__(), self.screen.attacks)
         attack.align(self)
 
     def handle_events(self, event):
@@ -108,24 +116,19 @@ class MeleeEnemy(Enemy):
 
     def update(self):
         super().update()
-        self.attacks.update()
-
-        for attack in self.attacks:
-            if attack.followPlayer:
+        for attack in self.screen.attacks:
+            if attack.followPlayer and attack.entity == self.__str__():
+                attack.update()
                 attack.align(self)
-            self.attack_cooldown = 100
-            self.charge(self.playerPos)
-            if self.isCharging and self.pos.distance_to(self.playerPos) == 0:
-                self.stop()
-                self.isCharging = False
+                self.attack_cooldown = 100
+                self.charge(self.playerPos)
+                if self.isCharging and self.pos.distance_to(self.playerPos) == 0:
+                    self.stop()
+                    self.isCharging = False
 
 
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
-
-        """if self.isCharging and self.pos.distance_to(self.playerPos) == 0:
-            self.stop()
-            self.isCharging = False"""
 
 
 

@@ -87,6 +87,8 @@ class Character(AnimatedSprite):
 		self.vel = vec(0, 0)
 		self.acc = vec(0, 0)
 
+	def reverse_direction(self):
+		self.direction = 'L' if self.direction == 'R' else 'R'
 
 	def move(self):
 		if self.vel.x > 0:
