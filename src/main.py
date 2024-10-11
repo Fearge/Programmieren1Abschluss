@@ -2,7 +2,7 @@ from constants import *
 from game import Game
 from os import path
 
-from screen import Screen
+from screen import Screen, StartScreen
 
 
 class Launcher(Game):
@@ -17,7 +17,7 @@ class Launcher(Game):
         self.fps = 60
 
     def start(self):
-        screen = Screen(self)
+        screen = StartScreen(self)
         self.set_screen(screen)
 
 
