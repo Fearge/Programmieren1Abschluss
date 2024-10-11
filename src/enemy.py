@@ -6,9 +6,8 @@ class Enemy(Character):
         }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):
-        super().__init__(pos, 10 ,groups)
+        super().__init__(screen, pos, 10 ,groups)
         # properties
-        self.screen = screen
         self.prev_pos = vec(pos)
         self.id = Enemy._id_counter
         Enemy._id_counter += 1
@@ -20,9 +19,7 @@ class Enemy(Character):
 
         self.attack_cooldown = 0
 
-        self.load()
-        self.image = self.active_anim.get_frame(0)
-        self.rect = self.image.get_rect()
+        self.rect.midbottom = self.pos
         self.movement_tick = 0
 
     def __str__(self):
@@ -73,15 +70,9 @@ class Enemy(Character):
     def update(self, dt = 1):
         super().update(1/self.screen.game.fps)
 
-        self.check_stuck()
         self.prev_pos = vec(self.pos)
-
         if self.is_player_near(self.screen.player, self.range_threshold):
             pg.event.post(pg.event.Event(pg.USEREVENT, {f'enemy': self.id}))
-            self.isPlayerNear = True
-        else:
-            self.isPlayerNear = False
-
         self.rect.midbottom = self.pos
 
 class MeleeEnemy(Enemy):
@@ -96,14 +87,15 @@ class MeleeEnemy(Enemy):
         if not self.isCharging:
             super().move()
 
-    def charge(self, pos):
-        direction = pos - self.pos
+    def charge(self, pos_to_charge):
+        direction = pos_to_charge - self.pos
         if direction.length() > 0:
             direction = direction.normalize()
-        self.vel.x = direction[0] * ENEMY_CHARGE
+            self.vel.x = direction.x * ENEMY_CHARGE
 
     def attack_player(self):
-        attack = Attack(self.screen, 10, True, self.__str__(), self.screen.attacks)
+        attack = ChargeAttack(self.screen, 10, self.__str__(),self.screen.player.pos, self.screen.attacks)
+        #self.charge(self.playerPos)
         attack.align(self)
 
     def handle_events(self, event):
@@ -117,7 +109,7 @@ class MeleeEnemy(Enemy):
     def update(self):
         super().update()
         for attack in self.screen.attacks:
-            if attack.followPlayer and attack.entity == self.__str__():
+            if attack.entity == self.__str__():
                 attack.update()
                 attack.align(self)
                 self.attack_cooldown = 100

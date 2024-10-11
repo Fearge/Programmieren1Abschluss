@@ -19,19 +19,13 @@ class Player(Character):
     }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):
-        super().__init__(pos, PLAYER_DAMAGE, groups)
-        self.screen = screen
-        self.pos = pos
+        super().__init__(screen,pos, PLAYER_DAMAGE, groups)
         self.jump_release = 0
         self.attacks = pg.sprite.Group()
         self.attack_cooldown = 0
         self.id = Player._id_counter
         Player._id_counter += 1
 
-        # image
-        self.load()
-        self.image = self.active_anim.get_frame(0)
-        self.rect = self.image.get_rect()
         self.rect.midbottom = pos
 
         self.width = self.rect.right - self.rect.left
@@ -77,7 +71,7 @@ class Player(Character):
         super().move()
 
     def attack(self):
-        attack = Attack(self.screen, 10, True,self.__str__(), self.screen.attacks)
+        attack = PlayerAttack(self.screen, 10, self.__str__(), self.screen.attacks)
         attack.align(self)
         print('attack')
 
@@ -91,7 +85,7 @@ class Player(Character):
     def update(self):
         super().update(1/self.screen.game.fps)
         for attack in self.screen.attacks:
-            if attack.followPlayer and attack.entity == self.__str__():
+            if attack.entity == self.__str__():
                 attack.update()
                 attack.align(self)
 
@@ -119,35 +113,53 @@ class Attack(AnimatedSprite):
     ANIMATIONS = {
         'walking': (WALKING_FRAMES, 0.12, LOOP)
     }
-    def __init__(self, screen, damage, followPlayer, entity, *groups):
-        super().__init__(groups)
+    def __init__(self, screen, damage, entity, *groups):
+        super().__init__(screen,groups)
 
         # properties
-        self.screen = screen
         self.pos = vec(0, 0)
         self.damage = damage
-        self.followPlayer = followPlayer
         self.entity = entity
 
         self.attack_length = 50
         self.__attack_duration = 0
 
-        self.load()
-        self.image = self.active_anim.get_frame(0)
-        self.rect = self.image.get_rect()
-        self.rect.center = self.pos
+        self.rect.midbottom = self.pos
+
+    @property
+    def attack_duration(self):
+        return self.__attack_duration
 
     def align(self, entity):
         if entity.direction == 'R':
-            self.rect.center = entity.pos + (entity.rect.width, -entity.rect.height / 2)
+            self.pos = entity.pos + vec(entity.rect.width, 0)
         elif entity.direction == 'L':
-            self.rect.center = entity.pos - (entity.rect.width, entity.rect.height / 2)
-        self.pos = entity.pos
+            self.pos = entity.pos - vec(entity.rect.width, 0)
+
+    def has_to_die(self):
+        pass
 
     def update(self):
         super().update(1 / self.screen.game.fps)
         self.__attack_duration += 1
-        if self.__attack_duration > self.attack_length:
+        if self.has_to_die():
             self.kill()
             print('killed')
+        self.rect.midbottom = self.pos
+
+class PlayerAttack(Attack):
+    def __init__(self, screen, damage, entity, *groups):
+        super().__init__(screen, damage, entity, groups)
+
+    def has_to_die(self):
+        return self.attack_duration > self.attack_length
+
+class ChargeAttack(Attack):
+    def __init__(self, screen, damage, entity, pos_to_charge: vec,*groups):
+        super().__init__(screen, damage, entity, groups)
+        self.__posToCharge = pos_to_charge
+
+    def has_to_die(self):
+        print(abs(self.pos.x - self.__posToCharge.x) < 10)
+        return abs(self.pos.x - self.__posToCharge.x) < 10
 

@@ -76,6 +76,8 @@ class Screen:
 			collide_with_enemies(self.player)
 
 
+
+
 		for enemy in self.enemies:
 			hits = pg.sprite.spritecollide(enemy, self.obstacles, False)
 			if hits:
