@@ -29,38 +29,22 @@ class Enemy(Character):
     def move(self):
         #init velocity and acceleration
         self.acc.x = self.vel.x * 0.12
+        # moving left and right
         if self.direction == 'R':
             self.vel.x = ENEMY_VEL
         else: self.vel.x = -ENEMY_VEL
 
-        if self.direction == 'L':
-                self.vel.x = -ENEMY_VEL
-            #moving left and right
+        #reverses direction every 100 ticks
         self.movement_tick += 1
         if self.movement_tick % 100 == 0:
             self.vel.x *= -1
-        super().move()
+        super().flip_image_on_direction()
 
     def handle_events(self, event):
         pass
 
     def stop(self):
         self.vel = vec(0,0)
-
-
-    def check_stuck(self):
-        if self.pos == self.prev_pos:
-            self.stuck_count += 1
-        else:
-            self.stuck_count = 0
-
-        if self.stuck_count > self.stuck_threshold:
-            self.reverse_direction()
-            self.movement_tick = 0
-            self.stuck_count = 0
-
-        # update previous position
-        self.prev_pos = vec(self.pos)
 
     def is_player_near(self, player, threshold):
         if abs(self.pos.y - player.pos.y) < 10:
@@ -75,28 +59,32 @@ class Enemy(Character):
             pg.event.post(pg.event.Event(pg.USEREVENT, {f'enemy': self.id}))
         self.rect.midbottom = self.pos
 
+
 class MeleeEnemy(Enemy):
     def __init__(self, screen, pos, *groups):
-
+        self.charge_attack = None
+        self.charge_target_pos = (0,0)
         self.isCharging = False
-        self.playerPos = vec(0,0)
         super().__init__(screen, pos, groups)
-        self.range_threshold = 500
+        self.range_threshold = 200
 
     def move(self):
         if not self.isCharging:
             super().move()
+        else:
+            self.vel = self.calculate_charge_velocity(self.charge_target_pos)
+            super().flip_image_on_direction()
 
-    def charge(self, pos_to_charge):
-        direction = pos_to_charge - self.pos
-        if direction.length() > 0:
-            direction = direction.normalize()
-            self.vel.x = direction.x * ENEMY_CHARGE
+    def calculate_charge_velocity(self, target_pos):
+        direction = target_pos - self.pos
+        direction = direction.normalize()
+        return direction * ENEMY_CHARGE
 
     def attack_player(self):
-        attack = ChargeAttack(self.screen, 10, self.__str__(),self.screen.player.pos, self.screen.attacks)
-        #self.charge(self.playerPos)
-        attack.align(self)
+        self.charge_target_pos = vec(self.screen.player.pos)
+        self.isCharging = True
+        self.charge_attack = ChargeAttack(self.screen, 10, self.__str__(), self.screen.attacks)
+        self.charge_attack.align(self)
 
     def handle_events(self, event):
         if event.type == pg.USEREVENT:
@@ -104,20 +92,25 @@ class MeleeEnemy(Enemy):
                 print('player near')
                 self.attack_player()
                 self.isCharging = True
-                self.playerPos = self.screen.player.pos
+                self.attack_cooldown = ENEMY_CHARGE_COOLDOWN  # Cooldown period before the next attack
 
     def update(self):
         super().update()
-        for attack in self.screen.attacks:
-            if attack.entity == self.__str__():
-                attack.update()
-                attack.align(self)
-                self.attack_cooldown = 100
-                self.charge(self.playerPos)
-                if self.isCharging and self.pos.distance_to(self.playerPos) == 0:
-                    self.stop()
-                    self.isCharging = False
 
+        if self.isCharging:
+            if self.pos.distance_to(self.charge_target_pos) < 5:  # Adjust threshold as needed
+                self.isCharging = False
+                if self.charge_attack:
+                    self.charge_attack.kill()
+                    self.charge_attack = None
+            elif self.charge_attack:
+                self.charge_attack.update()
+                self.charge_attack.align(self)
+
+        else:
+            if self.charge_attack: #additional check to kill charge attack if not charging (if bug occurs)
+                self.charge_attack.kill()
+                self.charge_attack = None
 
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
@@ -146,4 +139,5 @@ class RangedEnemy(Enemy):
         self.attacks.update()
         if self.isPlayerNear:
             self.attack_player()
+
 

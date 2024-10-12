@@ -12,8 +12,9 @@ class AnimatedSprite(pg.sprite.Sprite):
     ANIMATIONS = {}
 
     def __init__(self,screen, *groups):
-        super().__init__(groups)
+        super().__init__(*groups)
         self.screen = screen
+
         # control
         self.active_anim = None
         self.elapsed_time = 0
@@ -24,25 +25,6 @@ class AnimatedSprite(pg.sprite.Sprite):
         self.load()
         self.image = self.active_anim.get_frame(0)
         self.rect = self.image.get_rect()
-
-    def load(self):
-        spritesheet = Spritesheet(path.join(self.screen.game.img_dir, SPRITESHEET_PATH), colorkey=self.COLORKEY)
-        for name, (frames, duration, mode) in self.ANIMATIONS.items():
-            anim = spritesheet.get_animation(frames, duration, mode, scale=1.2)
-            self.store_animation(name, anim)
-
-    def animate(self):
-        for new_state, condition in self.transitions.get(self.active_name, []):
-            if condition:
-                self.set_active_animation(new_state)
-                break
-        self.image = self.active_anim.get_frame(self.elapsed_time)
-        if hasattr(self, 'direction') and self.direction == 'L':
-            self.image = pg.transform.flip(self.image, True, False)
-        self.rect = self.image.get_rect()
-
-    def handle_transition(self, transitions):
-        pass
 
     def store_animation(self, name, anim):
         self.animation_storage[name] = anim
@@ -64,6 +46,21 @@ class AnimatedSprite(pg.sprite.Sprite):
         self.active_name = name
         self.active_anim = self.animation_storage[name]
         self.elapsed_time = 0
+
+    def load(self):
+        spritesheet = Spritesheet(path.join(self.screen.game.img_dir, SPRITESHEET_PATH), colorkey=self.COLORKEY)
+        for name, (frames, duration, mode) in self.ANIMATIONS.items():
+            anim = spritesheet.get_animation(frames, duration, mode, scale=1.2)
+            self.store_animation(name, anim)
+
+    def animate(self):
+        for new_state, condition in self.transitions.get(self.active_name, []):
+            if condition:
+                self.set_active_animation(new_state)
+                break
+        self.image = self.active_anim.get_frame(self.elapsed_time)
+        self.rect = self.image.get_rect()
+
 
     def is_animation_finished(self):
         return self.active_anim.is_animation_finished(self.elapsed_time)
@@ -93,14 +90,12 @@ class Character(AnimatedSprite):
 
         self.rect.midbottom = self.pos
 
-    def reverse_direction(self):
-        self.direction = 'L' if self.direction == 'R' else 'R'
-
-    def move(self):
+    def flip_image_on_direction(self):
         if self.vel.x > 0:
             self.direction = 'R'
         elif self.vel.x < 0:
             self.direction = 'L'
+            self.image = pg.transform.flip(self.image, True, False)
 
     def get_hit(self, damage):
         self.health -= damage

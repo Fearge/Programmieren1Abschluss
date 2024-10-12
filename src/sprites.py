@@ -1,12 +1,7 @@
-from logging import currentframe
-from shutil import posix
-
-import pygame as pg
-from os import path
-
 
 from base_sprite import *
 from spritesheet import Spritesheet, Animation
+
 
 class Player(Character):
     # implement colorkey if needed, standard: (34, 177, 76)
@@ -68,7 +63,7 @@ class Player(Character):
 
         else:
             self.jump_release += 1
-        super().move()
+        super().flip_image_on_direction()
 
     def attack(self):
         attack = PlayerAttack(self.screen, 10, self.__str__(), self.screen.attacks)
@@ -85,7 +80,7 @@ class Player(Character):
     def update(self):
         super().update(1/self.screen.game.fps)
         for attack in self.screen.attacks:
-            if attack.entity == self.__str__():
+            if attack.entity_id == self.__str__():
                 attack.update()
                 attack.align(self)
 
@@ -113,13 +108,13 @@ class Attack(AnimatedSprite):
     ANIMATIONS = {
         'walking': (WALKING_FRAMES, 0.12, LOOP)
     }
-    def __init__(self, screen, damage, entity, *groups):
+    def __init__(self, screen, damage, entity_id, *groups):
         super().__init__(screen,groups)
 
         # properties
         self.pos = vec(0, 0)
         self.damage = damage
-        self.entity = entity
+        self.entity_id = entity_id
 
         self.attack_length = 50
         self.__attack_duration = 0
@@ -131,10 +126,10 @@ class Attack(AnimatedSprite):
         return self.__attack_duration
 
     def align(self, entity):
-        if entity.direction == 'R':
-            self.pos = entity.pos + vec(entity.rect.width, 0)
-        elif entity.direction == 'L':
-            self.pos = entity.pos - vec(entity.rect.width, 0)
+        offset = vec(entity.rect.width, 0) if entity.direction == 'R' else vec(-entity.rect.width, 0)
+        self.pos = entity.pos + offset
+        if entity.direction == 'L':
+            self.image = pg.transform.flip(self.image, True, False)
 
     def has_to_die(self):
         pass
@@ -148,18 +143,17 @@ class Attack(AnimatedSprite):
         self.rect.midbottom = self.pos
 
 class PlayerAttack(Attack):
-    def __init__(self, screen, damage, entity, *groups):
-        super().__init__(screen, damage, entity, groups)
+    def __init__(self, screen, damage, entity_id, *groups):
+        super().__init__(screen, damage, entity_id, *groups)
 
     def has_to_die(self):
         return self.attack_duration > self.attack_length
 
+
 class ChargeAttack(Attack):
-    def __init__(self, screen, damage, entity, pos_to_charge: vec,*groups):
-        super().__init__(screen, damage, entity, groups)
-        self.__posToCharge = pos_to_charge
+    def __init__(self, screen, damage, entity_id, *groups):
+        super().__init__(screen, damage, entity_id, *groups)
 
     def has_to_die(self):
-        print(abs(self.pos.x - self.__posToCharge.x) < 10)
-        return abs(self.pos.x - self.__posToCharge.x) < 10
+        return
 

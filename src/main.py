@@ -14,7 +14,7 @@ class Launcher(Game):
         self.map_dir = path.join(self.dir, 'assets', 'map')
 
         # settings
-        self.fps = 60
+        self.fps = FPS
 
     def start(self):
         screen = StartScreen(self)
