@@ -2,7 +2,7 @@
 from base_sprite import *
 from spritesheet import Animation
 from attacks import PlayerAttack
-
+from src.grapple import GrapplingHook
 
 
 class Player(Character):
@@ -25,13 +25,16 @@ class Player(Character):
 
         # Grappling hook
         self.grappling_hook = None
-        self.__is_grappling = False
         self.__pull_target_pos = vec(0, 0)
-        self.__is_pulling = False
+        self.is_pulling = False
+        self.hook_cooldown = 0
 
         self.rect.midbottom = pos
         self.width = self.rect.right - self.rect.left
         self.height = self.rect.top - self.rect.bottom
+
+
+
 
     def animate(self):
         self.transitions = {
@@ -79,18 +82,52 @@ class Player(Character):
         print('attack')
 
     def is_attack_finished(self):
-        return self.character_attack.attack_duration > self.character_attack.attack_length
+        return self.character_attack.attack_duration > self.attack_cooldown
 
+    def shoot_hook(self,target_pos: vec):
+        if self.hook_cooldown == 0:
+            self.grappling_hook = GrapplingHook(self.pos, self.screen.hooks)
+            self.grappling_hook.is_shooting = True
+            self.grappling_hook.pos = self.rect.center
+            self.grappling_hook.vel = (target_pos - self.grappling_hook.pos).normalize() * SHOOT_SPEED
+            self.hook_cooldown = PLAYER_HOOK_COOLDOWN
+
+
+    def pull(self):
+        if self.is_pulling:
+            direction = (self.grappling_hook.pos - self.pos).normalize()
+            self.vel += direction * PULL_SPEED
+            self.acc = vec(0,PULL_ACC)
+
+    def stop_pull(self):
+        self.grappling_hook.kill()
+        self.grappling_hook = None
 
     def handle_events(self, event):
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE and self.attack_cooldown == 0:
                 self.attack()
                 self.attack_cooldown = PLAYER_ATT_COOLDOWN
+            elif event.key == pg.K_e:
+                mouse_pos = pg.mouse.get_pos()
+                self.shoot_hook(vec(mouse_pos))
+        if event.type == pg.KEYUP:
+            if event.key == pg.K_e and self.grappling_hook:
+                self.stop_pull()
+
+
 
     def update(self):
         super().update()
-        self.rect.midbottom = self.pos
+        if self.grappling_hook:
+            self.grappling_hook.update()
+            if self.grappling_hook.is_attached:
+                self.is_pulling = True
+                self.pull()
+                if self.pos.distance_to(self.grappling_hook.pos) < self.width + 10:
+                  self.stop_pull()
+        if self.hook_cooldown > 0:
+            self.hook_cooldown -= 1
 
 
 class Obstacle(pg.sprite.Sprite):

@@ -1,22 +1,24 @@
-"""from pygame.math import Vector2 as vec
-from constants import *
-from src.base_sprite import AnimatedSprite
-from src.spritesheet import Animation
+import pygame as pg
+from pygame.math import Vector2 as vec
 
-
-class GrapplingHook(AnimatedSprite):
-    ANIMATIONS = {
-        'walking': (WALKING_FRAMES, 0.12, Animation.LOOP),
-    }
-    def __init__(self, screen, pos, *groups):
-        super().__init__(screen, *groups)
+class GrapplingHook(pg.sprite.Sprite):
+    def __init__(self, pos, *groups):
+        super().__init__(groups)
         self.pos = vec(pos)
-        self.vel = vec(0,0)  # Adjust speed as needed
-        self.is_active = False
+        self.vel = vec(0, 0)
+        self.is_shooting = False
         self.is_attached = False
+        self.path = []
+        self.image = pg.Surface((10, 10))
+        self.rect = pg.Rect(pos, (10, 10))  # Example size, adjust as needed
+        self.rect.midbottom = self.pos
+
+    def draw(self, surface):
+        if len(self.path) > 0:
+            pg.draw.lines(surface, (0, 0, 0), False, self.path, 2)  # Example color, adjust as needed
 
     def update(self):
-        if not self.is_attached:
-            self.pos += self.vel
-            self.rect.center = self.pos"""
-
+        self.pos += self.vel
+        self.rect.midbottom = self.pos
+        if self.is_shooting and not self.is_attached:
+            self.path.append(self.pos)

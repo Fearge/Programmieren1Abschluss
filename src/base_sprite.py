@@ -151,3 +151,5 @@ class Character(AnimatedSprite):
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
 
+        self.rect.midbottom = self.pos
+

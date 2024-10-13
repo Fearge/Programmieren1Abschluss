@@ -26,6 +26,7 @@ class Screen:
         self.enemies = pg.sprite.Group()
         self.obstacles = pg.sprite.Group()
         self.attacks = pg.sprite.Group()
+        self.hooks = pg.sprite.Group()
 
 
         for obj in self.map.tmx_data.objects:
@@ -57,7 +58,8 @@ class Screen:
 
         for attack in self.attacks:
             self.game.surface.blit(attack.image, self.camera.apply(attack))
-
+        for hook in self.hooks:
+            self.game.surface.blit(hook.image, self.camera.apply(hook))
         pg.display.flip()
 
     def check_collisions(self):
@@ -67,6 +69,7 @@ class Screen:
         if hits:
             for hit in hits:
                 collide_with_obstacles(self.player, hit)
+
 
         for enemy in self.enemies:
             hits = pg.sprite.spritecollide(enemy, self.obstacles, False)
@@ -79,13 +82,11 @@ class Screen:
         if hits:
             collide_with_enemies(self.player)
 
-        """for hook in self.hooks:
+        for hook in self.hooks:
             if not hook.is_attached:
                 hits = pg.sprite.spritecollide(hook, self.obstacles, False)
                 if hits:
-                    hook.is_attached = True
-                    hook.target = hits[0]
-                    hook_collision(hook, self.player)"""
+                    hook_collision(hook)
 
 
 

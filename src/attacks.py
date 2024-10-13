@@ -11,8 +11,6 @@ class Attack(AnimatedSprite):
         self.pos = vec(0, 0)
         self.damage = damage
         self.entity_id = entity_id
-
-        self.attack_length = 50
         self.__attack_duration = 0
 
         self.rect.midbottom = self.pos

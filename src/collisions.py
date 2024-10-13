@@ -29,12 +29,11 @@ def collide_with_obstacles(character, hit):
 		character.vel.x = 0
 		character.pos.x = hit.rect.left - character.rect.width/2 - 1
 
+
 def collide_with_enemies(player):
 	#player.kill()
 	pass
 
-def hook_collision(hook,player):
+def hook_collision(hook):
 	hook.vel = vec(0, 0)
-	hook.is_active = False
-	player.start_pulling(hook.pos)
-	player.handle_pulling()
+	hook.is_attached = True
