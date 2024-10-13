@@ -1,4 +1,7 @@
 from constants import *
+from src.screen import vec
+
+
 def collide_with_obstacles(character, hit):
 	# character's bottom and obstacle top
 	if abs(hit.rect.top - character.rect.bottom) < COLLISION_TOLERANCE:
@@ -30,4 +33,8 @@ def collide_with_enemies(player):
 	#player.kill()
 	pass
 
-
+def hook_collision(hook,player):
+	hook.vel = vec(0, 0)
+	hook.is_active = False
+	player.start_pulling(hook.pos)
+	player.handle_pulling()

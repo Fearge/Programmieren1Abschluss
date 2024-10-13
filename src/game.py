@@ -29,14 +29,14 @@ class Game:
 
     def set_screen(self, scr):
         # delete existing
-        if self.screen != None:
+        if self.screen is not None:
             del self.screen
             self.screen = None
 
         self.screen = scr
 
         # show new screen
-        if (self.screen != None):
+        if self.screen is not None:
             self.screen.run()
 
     def quit(self):

@@ -1,4 +1,5 @@
 from sprites import *
+from attacks import ChargeAttack
 class Enemy(Character):
     # implement colorkey if needed, standard: (34, 177, 76)
     ANIMATIONS = {
@@ -6,16 +7,14 @@ class Enemy(Character):
         }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):
-        super().__init__(screen, pos, 10 ,groups)
+        super().__init__(screen, pos,groups)
         # properties
         self.prev_pos = vec(pos)
-        self.id = Enemy._id_counter
+        self.id = Enemy._id_counter # for identification of enemy instances
         Enemy._id_counter += 1
 
-        self.stuck_count = 0
-        self.stuck_threshold = 100
         self.range_threshold = 100
-        self.isPlayerNear = False
+        self.is_attacking = False
 
         self.attack_cooldown = 0
 
@@ -43,16 +42,14 @@ class Enemy(Character):
     def handle_events(self, event):
         pass
 
-    def stop(self):
-        self.vel = vec(0,0)
-
+    # returns true if player is within threshold
     def is_player_near(self, player, threshold):
         if abs(self.pos.y - player.pos.y) < 10:
             return abs(self.pos.x-player.pos.x) < threshold
         return False
 
-    def update(self, dt = 1):
-        super().update(1/self.screen.game.fps)
+    def update(self):
+        super().update()
 
         self.prev_pos = vec(self.pos)
         if self.is_player_near(self.screen.player, self.range_threshold):
@@ -62,82 +59,46 @@ class Enemy(Character):
 
 class MeleeEnemy(Enemy):
     def __init__(self, screen, pos, *groups):
-        self.charge_attack = None
         self.charge_target_pos = (0,0)
-        self.isCharging = False
         super().__init__(screen, pos, groups)
         self.range_threshold = 200
 
+    # charge attack
     def move(self):
-        if not self.isCharging:
+        if not self.is_attacking:
             super().move()
         else:
-            self.vel = self.calculate_charge_velocity(self.charge_target_pos)
+            self.vel = self.calculate_charge_direction(self.charge_target_pos)
             super().flip_image_on_direction()
 
-    def calculate_charge_velocity(self, target_pos):
+    def calculate_charge_direction(self, target_pos):
         direction = target_pos - self.pos
-        direction = direction.normalize()
+        try:
+            direction = direction.normalize() # if vector is zero it cant be normalized
+        except ValueError:
+            return vec(0,0)
         return direction * ENEMY_CHARGE
+
+    def is_attack_finished(self):
+        return self.pos.distance_to(self.charge_target_pos) < 5
+
 
     def attack_player(self):
         self.charge_target_pos = vec(self.screen.player.pos)
-        self.isCharging = True
-        self.charge_attack = ChargeAttack(self.screen, 10, self.__str__(), self.screen.attacks)
-        self.charge_attack.align(self)
+        self.is_attacking = True
+        self.character_attack = ChargeAttack(self.screen, 10, self.__str__(), self.screen.attacks)
+        self.character_attack.align(self)
 
     def handle_events(self, event):
         if event.type == pg.USEREVENT:
             if event.dict.get('enemy') == self.id and self.attack_cooldown == 0:
                 print('player near')
                 self.attack_player()
-                self.isCharging = True
+                self.is_attacking = True
                 self.attack_cooldown = ENEMY_CHARGE_COOLDOWN  # Cooldown period before the next attack
 
     def update(self):
         super().update()
 
-        if self.isCharging:
-            if self.pos.distance_to(self.charge_target_pos) < 5:  # Adjust threshold as needed
-                self.isCharging = False
-                if self.charge_attack:
-                    self.charge_attack.kill()
-                    self.charge_attack = None
-            elif self.charge_attack:
-                self.charge_attack.update()
-                self.charge_attack.align(self)
-
-        else:
-            if self.charge_attack: #additional check to kill charge attack if not charging (if bug occurs)
-                self.charge_attack.kill()
-                self.charge_attack = None
-
-        if self.attack_cooldown > 0:
-            self.attack_cooldown -= 1
-
-
-
-
-class RangedEnemy(Enemy):
-    def __init__(self, screen, pos, *groups):
-        self.attacks = pg.sprite.Group()
-        super().__init__(screen, pos, groups)
-        super.range_threshold = 300
-
-    """def attack_player(self):
-        if self.attack_cooldown == 0:
-            projectile = Projectile(self.screen, self.pos, self.screen.player.pos, self.attacks)
-            self.attack_cooldown = 100  # Cooldown period before the next attack
-"""
-    def handle_events(self, event):
-        if event.type == pg.USEREVENT:
-            if event.dict.get('enemy') == self.id and self.attack_cooldown == 0:
-                pass
-
-    def update(self):
-        super().update()
-        self.attacks.update()
-        if self.isPlayerNear:
-            self.attack_player()
 
 

@@ -65,20 +65,23 @@ class AnimatedSprite(pg.sprite.Sprite):
     def is_animation_finished(self):
         return self.active_anim.is_animation_finished(self.elapsed_time)
 
-    def update(self, dt):
-        self.elapsed_time += dt
+    def update(self):
+        self.elapsed_time += 1/self.screen.game.fps
         self.animate()
 
 
 class Character(AnimatedSprite):
 
-    def __init__(self, screen, pos, damage, *groups):
+    def __init__(self, screen, pos,  *groups):
         super().__init__(screen,groups)
 
         # properties
         self.health = HEALTH
         self.direction = 'R'
         self.alive = True
+        self.character_attack = None
+        self.is_attacking = False
+        self.attack_cooldown = 0
 
         # physics
         self.ground_count = 0
@@ -100,8 +103,14 @@ class Character(AnimatedSprite):
     def get_hit(self, damage):
         self.health -= damage
 
-    def update(self, dt):
-        super().update(dt)
+    def move(self):
+        pass
+
+    def is_attack_finished(self):
+        pass
+
+    def update(self):
+        super().update()
 
         # apply gravity
         # self.acc = vec(0, 0)
@@ -123,4 +132,22 @@ class Character(AnimatedSprite):
         if self.vel.y > 10:
             self.vel.y = 10
 
+        #attack handling
+        if self.is_attacking:
+            if self.is_attack_finished():  # Adjust threshold as needed
+                self.is_attacking = False
+                if self.character_attack:
+                    self.character_attack.kill()
+                    self.character_attack = None
+            elif self.character_attack:
+                self.character_attack.update()
+                self.character_attack.align(self) # good enough for now, mb has to be reworked for ranged attacks
+
+        else:
+            if self.character_attack: #additional check to kill charge (if bug occurs)
+                self.character_attack.kill()
+                self.character_attack = None
+
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= 1
 

@@ -1,6 +1,8 @@
 
 from base_sprite import *
-from spritesheet import Spritesheet, Animation
+from spritesheet import Animation
+from attacks import PlayerAttack
+
 
 
 class Player(Character):
@@ -14,15 +16,20 @@ class Player(Character):
     }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):
-        super().__init__(screen,pos, PLAYER_DAMAGE, groups)
+        super().__init__(screen,pos,  groups)
+        # properties
         self.jump_release = 0
-        self.attacks = pg.sprite.Group()
         self.attack_cooldown = 0
         self.id = Player._id_counter
         Player._id_counter += 1
 
-        self.rect.midbottom = pos
+        # Grappling hook
+        self.grappling_hook = None
+        self.__is_grappling = False
+        self.__pull_target_pos = vec(0, 0)
+        self.__is_pulling = False
 
+        self.rect.midbottom = pos
         self.width = self.rect.right - self.rect.left
         self.height = self.rect.top - self.rect.bottom
 
@@ -66,9 +73,14 @@ class Player(Character):
         super().flip_image_on_direction()
 
     def attack(self):
-        attack = PlayerAttack(self.screen, 10, self.__str__(), self.screen.attacks)
-        attack.align(self)
+        self.character_attack = PlayerAttack(self.screen, 10, self.__str__(), self.screen.attacks)
+        self.character_attack.align(self)
+        self.is_attacking = True
         print('attack')
+
+    def is_attack_finished(self):
+        return self.character_attack.attack_duration > self.character_attack.attack_length
+
 
     def handle_events(self, event):
         if event.type == pg.KEYDOWN:
@@ -76,17 +88,8 @@ class Player(Character):
                 self.attack()
                 self.attack_cooldown = PLAYER_ATT_COOLDOWN
 
-
     def update(self):
-        super().update(1/self.screen.game.fps)
-        for attack in self.screen.attacks:
-            if attack.entity_id == self.__str__():
-                attack.update()
-                attack.align(self)
-
-        if self.attack_cooldown > 0:
-            self.attack_cooldown -= 1
-
+        super().update()
         self.rect.midbottom = self.pos
 
 
@@ -102,58 +105,4 @@ class Obstacle(pg.sprite.Sprite):
         self.y = pos[1]
         self.rect.x = pos[0]
         self.rect.y = pos[1]
-
-class Attack(AnimatedSprite):
-    # implement colorkey if needed, standard: (34, 177, 76)
-    ANIMATIONS = {
-        'walking': (WALKING_FRAMES, 0.12, LOOP)
-    }
-    def __init__(self, screen, damage, entity_id, *groups):
-        super().__init__(screen,groups)
-
-        # properties
-        self.pos = vec(0, 0)
-        self.damage = damage
-        self.entity_id = entity_id
-
-        self.attack_length = 50
-        self.__attack_duration = 0
-
-        self.rect.midbottom = self.pos
-
-    @property
-    def attack_duration(self):
-        return self.__attack_duration
-
-    def align(self, entity):
-        offset = vec(entity.rect.width, 0) if entity.direction == 'R' else vec(-entity.rect.width, 0)
-        self.pos = entity.pos + offset
-        if entity.direction == 'L':
-            self.image = pg.transform.flip(self.image, True, False)
-
-    def has_to_die(self):
-        pass
-
-    def update(self):
-        super().update(1 / self.screen.game.fps)
-        self.__attack_duration += 1
-        if self.has_to_die():
-            self.kill()
-            print('killed')
-        self.rect.midbottom = self.pos
-
-class PlayerAttack(Attack):
-    def __init__(self, screen, damage, entity_id, *groups):
-        super().__init__(screen, damage, entity_id, *groups)
-
-    def has_to_die(self):
-        return self.attack_duration > self.attack_length
-
-
-class ChargeAttack(Attack):
-    def __init__(self, screen, damage, entity_id, *groups):
-        super().__init__(screen, damage, entity_id, *groups)
-
-    def has_to_die(self):
-        return
 
