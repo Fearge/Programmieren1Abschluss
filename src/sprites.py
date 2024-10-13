@@ -94,10 +94,10 @@ class Player(Character):
 
 
     def pull(self):
-        if self.is_pulling:
+        if self.is_pulling and self.grappling_hook:
             direction = (self.grappling_hook.pos - self.pos).normalize()
-            self.vel += direction * PULL_SPEED
-            self.acc = vec(0,PULL_ACC)
+            self.vel = direction * PULL_SPEED
+            self.acc = direction * PULL_ACC
 
     def stop_pull(self):
         self.grappling_hook.kill()
@@ -109,8 +109,10 @@ class Player(Character):
                 self.attack()
                 self.attack_cooldown = PLAYER_ATT_COOLDOWN
             elif event.key == pg.K_e:
-                mouse_pos = pg.mouse.get_pos()
-                self.shoot_hook(vec(mouse_pos))
+                mouse_pos = self.screen.camera.get_mouse_pos_in_world()
+                print(mouse_pos)
+                self.shoot_hook(mouse_pos)
+                print(mouse_pos)
         if event.type == pg.KEYUP:
             if event.key == pg.K_e and self.grappling_hook:
                 self.stop_pull()
@@ -118,7 +120,6 @@ class Player(Character):
 
 
     def update(self):
-        super().update()
         if self.grappling_hook:
             self.grappling_hook.update()
             if self.grappling_hook.is_attached:
@@ -128,6 +129,8 @@ class Player(Character):
                   self.stop_pull()
         if self.hook_cooldown > 0:
             self.hook_cooldown -= 1
+        super().update()
+
 
 
 class Obstacle(pg.sprite.Sprite):

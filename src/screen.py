@@ -38,6 +38,7 @@ class Screen:
             elif obj.name == 'melee_enemy':
                 enemy = MeleeEnemy(self, obj_midbottom, self.enemies)
                 self.all_sprites.add(enemy)
+
         self.camera = Camera(self.game, self.map.width, self.map.height)
 
     def run(self):

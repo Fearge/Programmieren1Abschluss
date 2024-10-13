@@ -40,6 +40,9 @@ class Camera:
     def smooth(self, start, end, factor):
         return start + factor * (end - start)
 
+    def get_mouse_pos_in_world(self):
+        return pg.mouse.get_pos() + pg.Vector2(self.camera.x, self.camera.y)
+
     def update(self, target):
         target_x = max(-self.width + self.game.width, min(0, int(self.game.width / 2) - target.rect.centerx))
         target_y = max(-self.height + self.game.height, min(0, int(self.game.height / 2) - target.rect.centery))

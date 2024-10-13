@@ -21,12 +21,6 @@ class Game:
         # current directory
         self.dir = path.dirname(__file__)
 
-    def draw_text(self, x, y, font, color, text):
-        surface = font.render(text, True, color)
-        rect = surface.get_rect()
-        rect.midtop = (x, y)
-        self.surface.blit(surface, rect)
-
     def set_screen(self, scr):
         # delete existing
         if self.screen is not None:
