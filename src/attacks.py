@@ -32,10 +32,15 @@ class Attack(AnimatedSprite):
         self.rect.midbottom = self.pos
 
 
+
+
+
 # for possible future development of character-specific attacks
 class PlayerAttack(Attack):
     def __init__(self, screen, damage, entity_id, *groups):
         super().__init__(screen, damage, entity_id, *groups)
+
+
 
 
 class ChargeAttack(Attack):

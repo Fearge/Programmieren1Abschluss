@@ -46,7 +46,7 @@ class Game:
                 self.quit()
             self.screen.player.handle_events(e)
 
-            for enemie in self.screen.enemies:
-                enemie.handle_events(e)
+            for enemy in self.screen.enemies:
+                enemy.handle_events(e)
 
 
