@@ -86,9 +86,8 @@ class Player(Character):
 
     def shoot_hook(self,target_pos: vec):
         if self.hook_cooldown == 0:
-            self.grappling_hook = GrapplingHook(self.pos, self.screen.hooks)
+            self.grappling_hook = GrapplingHook(self.rect.center, self.screen.hooks)
             self.grappling_hook.is_shooting = True
-            self.grappling_hook.pos = self.rect.center
             self.grappling_hook.vel = (target_pos - self.grappling_hook.pos).normalize() * SHOOT_SPEED
             self.hook_cooldown = PLAYER_HOOK_COOLDOWN
 
@@ -123,8 +122,6 @@ class Player(Character):
             if self.grappling_hook.is_attached:
                 self.is_pulling = True
                 self.pull()
-                if self.pos.distance_to(self.grappling_hook.pos) < self.width + 10:
-                  self.stop_pull()
         if self.hook_cooldown > 0:
             self.hook_cooldown -= 1
         super().update()

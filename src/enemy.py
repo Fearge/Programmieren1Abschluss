@@ -56,6 +56,9 @@ class Enemy(Character):
         self.prev_pos = vec(self.pos)
         if self.is_player_near(self.screen.player, self.range_threshold):
             pg.event.post(pg.event.Event(pg.USEREVENT, {f'enemy': self.id}))
+        if self.health == 0:
+            self.kill()
+            self.alive = False
         self.rect.midbottom = self.pos
 
 
@@ -103,4 +106,15 @@ class MeleeEnemy(Enemy):
         super().update()
 
 
+"""class Boss(Enemy):
+    def __init__(self, screen, pos, *groups):
+        super().__init__(screen, pos, groups)
+        self.range_threshold = 300
+        
+    def attack1(self):
+        pass
+    
+    def attack2(self):
+        pass
 
+    """
