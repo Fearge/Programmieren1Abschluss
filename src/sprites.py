@@ -31,29 +31,28 @@ class Player(Character):
 
 		# MOVEMENT ANIMATIONS
 		# walking animation
-		walking_frames = [[22, 346, 62, 55], [88, 348, 65, 49], [160, 345, 65, 54], [238, 344, 53, 56], \
-			[296, 338, 60, 57], [365, 342, 63, 51], [433, 343, 65, 52], [503, 343, 58, 55]]
-		walking_anim = spritesheet.get_animation(walking_frames, 0.12, Animation.PlayMode.LOOP, scale=1.2)
+		walking_frames = [[37, 44, 91, 170], [41, 235, 92, 172]]
+		walking_anim = spritesheet.get_animation(walking_frames, 0.6, Animation.PlayMode.LOOP, scale=0.5)
 		self.store_animation('walking', walking_anim)
 
 		# standing animation
-		standing_frames = [(28, 247, 34, 63), (73, 248, 34, 62), (115, 248, 35, 61)]
-		standing_animation = spritesheet.get_animation(standing_frames, 0.20, Animation.PlayMode.LOOP, scale=1.2)
+		standing_frames = [(46, 630, 92, 176)]
+		standing_animation = spritesheet.get_animation(standing_frames, 0.20, Animation.PlayMode.LOOP, scale=0.5)
 		self.store_animation('standing', standing_animation)
 
 		# jumping animation
-		jumping_frames = [(609, 343, 43, 51), (664, 337, 48, 64), (720, 338, 48, 64)]
-		jumping_animation = spritesheet.get_animation(jumping_frames, 0.10, Animation.PlayMode.NORMAL, scale=1.2)
+		jumping_frames = [(40, 430, 92, 176)]
+		jumping_animation = spritesheet.get_animation(jumping_frames, 0.80, Animation.PlayMode.NORMAL, scale=0.5)
 		self.store_animation('jumping', jumping_animation)
 
 		# falling animation
-		falling_frames = [(773, 344, 60, 50), (839, 323, 44, 80), (897, 326, 46, 77)]
-		falling_animation = spritesheet.get_animation(falling_frames, 0.10, Animation.PlayMode.NORMAL, scale=1.2)
+		falling_frames = [(40, 430, 92, 176)]
+		falling_animation = spritesheet.get_animation(falling_frames, 0.80, Animation.PlayMode.NORMAL, scale=0.5)
 		self.store_animation('falling', falling_animation)
 
 		# landing animation
-		landing_frames = [(960, 336, 47, 69), (1023, 362, 47, 43), (1081, 352, 42, 52)]
-		landing_animation = spritesheet.get_animation(landing_frames, 0.10, Animation.PlayMode.NORMAL, scale=1.2)
+		landing_frames = [(46, 630, 92, 176)]
+		landing_animation = spritesheet.get_animation(landing_frames, 0.80, Animation.PlayMode.NORMAL, scale=0.5)
 		self.store_animation('landing', landing_animation)
 
 		# batarang throw
@@ -187,8 +186,8 @@ class Enemy(Character):
 		self.movement_tick = 0
 
 	def load(self):
-		self.image = pg.image.load(path.join('assets','img','title_bg.jpg')).convert_alpha()
-		self.image = pg.transform.scale(self.image, (100, 100))
+		self.image = pg.image.load(path.join('assets','img','enemy_devil.png')).convert_alpha()
+		self.image = pg.transform.scale(self.image, (55, 75))
 
 	def move(self):
 		self.movement_tick += 1
@@ -216,7 +215,7 @@ class Enemy(Character):
 		super().update(1/self.screen.game.fps)
 
 		self.check_stuck()
-		print(f'pos{self.pos} prev pos{self.prev_pos}')
+		#print(f'pos{self.pos} prev pos{self.prev_pos}')
 
 		self.prev_pos = vec(self.pos)
 		self.rect.midbottom = self.pos
