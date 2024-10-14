@@ -42,14 +42,13 @@ class Player(Character):
 
     def animate(self):
         self.transitions = {
-            "walking": [("standing", self.vel.x == 0), ("jumping", self.vel.y < 0)],
-            "standing": [("walking", abs(self.vel.x) > 0), ("jumping", self.vel.y < 0)],
-            "jumping": [("falling", self.vel.y > 0)],
-            "falling": [("landing", self.ground_count > 0)],
+            "walking": [("standing", self.vel.x == 0), ("jumping", self.vel.y < 0),("keuling", self.is_attacking)],
+            "standing": [("walking", abs(self.vel.x) > 0), ("jumping", self.vel.y < 0),("keuling", self.is_attacking)],
+            "jumping": [("falling", self.vel.y > 0),("keuling", self.is_attacking)],
+            "falling": [("landing", self.ground_count > 0),("keuling", self.is_attacking)],
             "landing": [("walking", self.is_animation_finished() and abs(self.vel.x) > 0),
-                        ("standing", self.is_animation_finished() and abs(self.vel.x) == 0)],
-            "keuling": [("standing", self.is_animation_finished())],
-            "walking": [("keuling", self.is_attacking)]
+                        ("standing", self.is_animation_finished() and abs(self.vel.x) == 0),("keuling", self.is_attacking)],
+            "keuling": [("standing", self.character_attack is None)]
         }
         super().animate()
 
@@ -66,7 +65,7 @@ class Player(Character):
             self.acc.x = PLAYER_ACC
 
         # jumping
-        if keys[pg.K_w]:
+        if keys[pg.K_SPACE]:
             if self.jump_release > 0:
                 if self.ground_count > 0 and not self.active_name == 'falling':
                     self.vel.y = PLAYER_JUMP
@@ -109,11 +108,11 @@ class Player(Character):
             if event.button == 1 and self.attack_cooldown == 0: #attack on left mouse click
                 self.attack()
                 self.attack_cooldown = PLAYER_ATT_COOLDOWN
-            elif event.button == 0:
+            elif event.button == 3:
                 mouse_pos = self.screen.camera.get_mouse_pos_in_world()
                 self.shoot_hook(mouse_pos)
         elif event.type == pg.MOUSEBUTTONUP:
-            if event.button == 0 and self.grappling_hook:
+            if event.button == 3 and self.grappling_hook:
                 self.stop_pull()
 
 

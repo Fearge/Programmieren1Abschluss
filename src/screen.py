@@ -5,6 +5,7 @@ from collisions import *
 from map import TiledMap, Camera
 from sprites import Obstacle, Player
 from src.enemy import MeleeEnemy
+from health_bar import HealthBar
 
 vec = pg.math.Vector2
 
@@ -12,7 +13,7 @@ class Screen:
     def __init__(self, game):
         self.game = game
         self.health_bar = HealthBar(10, 10, 200, 20, HEALTH)  # Position and size of the health bar
-
+        self.enemies_health_bars = []
         self.load()
         self.new()
 
@@ -65,8 +66,12 @@ class Screen:
             self.game.surface.blit(attack.image, self.camera.apply(attack))
         for hook in self.hooks:
             self.game.surface.blit(hook.image, self.camera.apply(hook))
+        # health bars
+        self.health_bar.draw(self.game.surface, None)  # Draw the health bar
 
-        self.health_bar.draw(self.game.surface)  # Draw the health bar
+        for enemy in self.enemies:
+            enemy.health_bar.draw(self.game.surface, self.camera)
+
 
         pg.display.flip()
 
@@ -97,30 +102,6 @@ class Screen:
                 hits = pg.sprite.spritecollide(hook, self.obstacles, False)
                 if hits:
                     hook_collision(hook)
-
-class HealthBar:
-    def __init__(self, x, y, width, height, max_health):
-        self.rect = pg.Rect(x, y, width, height)
-        self.max_health = max_health
-        self.current_health = 0
-
-    def update(self, current_health):
-        self.current_health = current_health
-
-    def draw(self, surface):
-        # Calculate the width of the health bar based on current health
-        health_ratio = self.current_health / self.max_health
-        health_width = self.rect.width * health_ratio
-
-        # Draw the background of the health bar
-        pg.draw.rect(surface, (255, 0, 0), self.rect)  # Red background
-        # Draw the current health
-        pg.draw.rect(surface, (0, 255, 0), (self.rect.x, self.rect.y, health_width, self.rect.height))  # Green health
-
-
-
-
-
 
 class StartScreen:
     def __init__(self, game):
@@ -165,8 +146,6 @@ class StartScreen:
             self.handle_events()
             self.draw()
 
-import pygame as pg
-
 class DeathScreen:
     def __init__(self, game):
         self.game = game
@@ -193,7 +172,7 @@ class DeathScreen:
         while True:
             self.handle_events()
             self.display()
-            self.clock.tick(60)
+            self.clock.tick(self.game.fps)
 
     def display(self):
         # Hintergrund

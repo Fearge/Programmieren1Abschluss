@@ -1,7 +1,6 @@
-import asyncio
-
 from sprites import *
 from attacks import ChargeAttack
+from health_bar import HealthBar
 class Enemy(Character):
     # implement colorkey if needed, standard: (34, 177, 76)
     ANIMATIONS = {
@@ -14,6 +13,8 @@ class Enemy(Character):
         self.prev_pos = vec(pos)
         self.id = Enemy._id_counter # for identification of enemy instances
         Enemy._id_counter += 1
+
+        self.health_bar = HealthBar(self.pos.x, self.pos.y, 50, 10, self.health)
 
         self.range_threshold = 100
         self.is_attacking = False
@@ -52,13 +53,12 @@ class Enemy(Character):
 
     def update(self):
         super().update()
-
         self.prev_pos = vec(self.pos)
         if self.is_player_near(self.screen.player, self.range_threshold):
             pg.event.post(pg.event.Event(pg.USEREVENT, {f'enemy': self.id}))
-        if self.health == 0:
-            self.kill()
-            self.alive = False
+        self.health_bar.rect.x = self.rect.x
+        self.health_bar.rect.y = self.rect.y - 10
+        self.health_bar.update(self.health)
         self.rect.midbottom = self.pos
 
 
@@ -81,7 +81,7 @@ class MeleeEnemy(Enemy):
         try:
             direction = direction.normalize() # if vector is zero it cant be normalized
         except ValueError:
-            return vec(0,0)
+            return None
         return direction * ENEMY_CHARGE
 
     def is_attack_finished(self):

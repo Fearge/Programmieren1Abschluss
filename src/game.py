@@ -16,8 +16,8 @@ class Game:
 
         # set screen
         self.screen = None
-        #self.surface = pg.display.set_mode(dim)
-        self.surface = pg.display.set_mode(dim, pg.FULLSCREEN)
+        self.surface = pg.display.set_mode(dim)
+        #self.surface = pg.display.set_mode(dim, pg.FULLSCREEN)
         self.clock = pg.time.Clock()
 
         # current directory
@@ -49,5 +49,6 @@ class Game:
 
             for enemy in self.screen.enemies:
                 enemy.handle_events(e)
+
 
 
