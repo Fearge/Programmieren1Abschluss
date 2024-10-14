@@ -50,7 +50,7 @@ class AnimatedSprite(pg.sprite.Sprite):
     def load(self):
         spritesheet = Spritesheet(path.join(self.screen.game.img_dir, SPRITESHEET_PATH), colorkey=self.COLORKEY)
         for name, (frames, duration, mode) in self.ANIMATIONS.items():
-            anim = spritesheet.get_animation(frames, duration, mode, scale=1.2)
+            anim = spritesheet.get_animation(frames, duration, mode, scale=0.5)
             self.store_animation(name, anim)
 
     def animate(self):

@@ -5,7 +5,7 @@ from attacks import ChargeAttack
 class Enemy(Character):
     # implement colorkey if needed, standard: (34, 177, 76)
     ANIMATIONS = {
-            'walking': (WALKING_FRAMES, 0.12, Animation.LOOP),
+            'enemy_walking': (ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
         }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):

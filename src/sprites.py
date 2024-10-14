@@ -8,11 +8,13 @@ from src.grapple import GrapplingHook
 class Player(Character):
     # implement colorkey if needed, standard: (34, 177, 76)
     ANIMATIONS = {
-        'walking': (WALKING_FRAMES, 0.12, Animation.LOOP),
-        'standing': (STANDING_FRAMES, 0.20, LOOP),
-        'jumping': (JUMPING_FRAMES, 0.10, NORMAL),
-        'falling': (FALLING_FRAMES, 0.10, NORMAL),
-        'landing': (LANDING_FRAMES, 0.10, NORMAL)
+        'walking': (WALKING_FRAMES, 0.6, Animation.LOOP),
+        'standing': (STANDING_FRAMES, 0.80, LOOP),
+        'jumping': (JUMPING_FRAMES, 0.80, NORMAL),
+        'falling': (FALLING_FRAMES, 0.80, NORMAL),
+        'landing': (LANDING_FRAMES, 0.80, NORMAL),
+        'enemy_walking': (ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
+        'keuling': (KEULING_FRAMES, 0.6, NORMAL)
     }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):
