@@ -2,7 +2,7 @@ from base_sprite import *
 class Attack(AnimatedSprite):
     # implement colorkey if needed, standard: (34, 177, 76)
     ANIMATIONS = {
-        'swooshing': (SWOOSHING_FRAMES, 0.6, NORMAL)
+        'Swooshing': (SWOOSHING_FRAMES, 0.6, NORMAL)
     }
     def __init__(self, screen, damage, entity_id, *groups):
         super().__init__(screen,groups)
