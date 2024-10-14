@@ -1,3 +1,4 @@
+from statistics import NormalDist
 
 from base_sprite import *
 from spritesheet import Animation
@@ -14,7 +15,8 @@ class Player(Character):
         'falling': (FALLING_FRAMES, 0.80, NORMAL),
         'landing': (LANDING_FRAMES, 0.80, NORMAL),
         'enemy_walking': (ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
-        'keuling': (KEULING_FRAMES, 0.6, NORMAL)
+        'keuling': (KEULING_FRAMES, 0.6, NORMAL),
+        'swooshing': (SWOOSHING_FRAMES, 0.6, NORMAL)
     }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):
