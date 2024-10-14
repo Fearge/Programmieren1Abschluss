@@ -21,6 +21,8 @@ class Launcher(Game):
         self.set_screen(screen)
 
 
+
+
 if __name__ == '__main__':
     launcher = Launcher()
     launcher.start()

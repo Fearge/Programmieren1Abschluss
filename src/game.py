@@ -1,6 +1,7 @@
 import pygame as pg
 import sys
 
+
 from os import path
 
 class Game:

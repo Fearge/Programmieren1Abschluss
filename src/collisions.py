@@ -10,6 +10,7 @@ def collide_with_obstacles(character, hit):
 		character.ground_count += 1
 		return
 
+
 	# character's top and obstacle bottom
 	if abs(hit.rect.bottom - character.rect.top) < COLLISION_TOLERANCE:
 		character.vel.y = 0
@@ -33,7 +34,8 @@ def collide_with_obstacles(character, hit):
 
 
 def collide_with_enemies(player):
-	#player.kill()
+	player.kill()
+	player.health = 0
 	pass
 
 def hook_collision(hook):
