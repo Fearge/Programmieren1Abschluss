@@ -110,9 +110,7 @@ class Player(Character):
                 self.attack_cooldown = PLAYER_ATT_COOLDOWN
             elif event.key == pg.K_e:
                 mouse_pos = self.screen.camera.get_mouse_pos_in_world()
-                print(mouse_pos)
                 self.shoot_hook(mouse_pos)
-                print(mouse_pos)
         if event.type == pg.KEYUP:
             if event.key == pg.K_e and self.grappling_hook:
                 self.stop_pull()
