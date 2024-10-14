@@ -54,7 +54,7 @@ class Screen:
         self.check_collisions()
         self.camera.update(self.player)
         self.health_bar.update(self.player.health)
-        if self.player.health <= 0:
+        if self.player.health <= 0 or self.player.pos.y > self.map.height + 100:
             self.game.set_screen(DeathScreen(self.game))
 
     def display(self):
