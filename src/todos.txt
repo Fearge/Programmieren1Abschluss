@@ -1,6 +1,4 @@
 TODOS (Mario):
-- Nach Charge weiter Idle  !!
 - Attack Abfrage + Damage !!!
-- Attack duration auf charge dauer angleichen !
 - RangedEnemy implementieren !
 - Boss implementieren !

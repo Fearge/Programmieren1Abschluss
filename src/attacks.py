@@ -12,6 +12,7 @@ class Attack(AnimatedSprite):
         self.damage = damage
         self.entity_id = entity_id
         self.__attack_duration = 0
+        self.has_hit = False
 
         self.rect.midbottom = self.pos
 

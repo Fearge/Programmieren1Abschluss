@@ -52,6 +52,8 @@ class Screen:
         self.all_sprites.update()
         self.check_collisions()
         self.camera.update(self.player)
+        if self.player.health == 0:
+            self.game.set_screen(DeathScreen(self.game))
 
     def display(self):
         self.game.surface.blit(self.map_img, self.camera.apply(self.map))
@@ -78,13 +80,13 @@ class Screen:
                 for hit in hits:
                     collide_with_obstacles(enemy, hit)
 
-        #collisions with enemies
-        hits = pg.sprite.spritecollide(self.player, self.enemies, False)
-        if hits:
-            collide_with_enemies(self.player)
-            if self.player.health == 0:
-                self.game.set_screen(DeathScreen(self.game))
-
+        # attacks
+        for attack in self.attacks:
+            hits = pg.sprite.spritecollide(attack, self.all_sprites, False)
+            if hits:
+                for hit in hits:
+                    attack_collision(attack, hit)
+        # Hook
         for hook in self.hooks:
             if not hook.is_attached:
                 hits = pg.sprite.spritecollide(hook, self.obstacles, False)
