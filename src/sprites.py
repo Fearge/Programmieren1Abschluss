@@ -1,3 +1,8 @@
+#----------------------------
+#Sprites were generously crafted by Pascal Rosen & Tatjana Schmitt (Kommunikationsdesign)
+#----------------------------
+
+
 from statistics import NormalDist
 
 from base_sprite import *
