@@ -101,11 +101,11 @@ class Screen:
 class StartScreen:
     def __init__(self, game):
         self.game = game
-        self.font = pg.font.Font(None, 100)  # Verwende eine Standard-Schriftart
+        self.font = pg.font.Font(None, 130)  # Verwende eine Standard-Schriftart
         self.button_font = pg.font.Font(None, 80)
         self.button_color = (255, 255, 255)  # Weiß
         self.hover_color = (200, 200, 200)  # Hellgrau
-        self.start_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 2), (200, 100))  # Button-Rechteck
+        self.start_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 5 * 3), (200, 100))  # Button-Rechteck
 
     def draw(self):
         # Hintergrundeinstellung (z. B. schwarz)
@@ -113,7 +113,7 @@ class StartScreen:
 
         # Titeltext zeichnen
         title_surface = self.font.render("Programmieren 1", True, (255, 255, 255))
-        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 5 * 2))
         self.game.surface.blit(title_surface, title_rect)
 
         # Startbutton zeichnen
@@ -150,7 +150,7 @@ class DeathScreen:
         self.clock = pg.time.Clock()
 
         # Farben und Schriftarten
-        self.font = pg.font.Font(None, 180)  # Standard pygame Schriftart für "Game Over"
+        self.font = pg.font.Font(None, 150)  # Standard pygame Schriftart für "Game Over"
         self.button_font = pg.font.Font(None, 80)  # Gleiche Schriftgröße wie der "Start"-Button
         self.game_over_color = (255, 0, 0)  # Rot für "Game Over"
         self.button_color = (255, 255, 255)  # Weiß für den Button
