@@ -54,14 +54,10 @@ class Player(Character):
         keys = pg.key.get_pressed()
         # horizontal movement
         if keys[pg.K_a]:
-            self.direction = 'L'
-            if not self.attack_count > 0:
-                self.acc.x = -PLAYER_ACC
+            self.acc.x = -PLAYER_ACC
 
         elif keys[pg.K_d]:
-            self.direction = 'R'
-            if not self.attack_count > 0:
-                self.acc.x = PLAYER_ACC
+            self.acc.x = PLAYER_ACC
 
         # jumping
         if keys[pg.K_w]:

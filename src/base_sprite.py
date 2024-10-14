@@ -7,8 +7,8 @@ vec = pg.math.Vector2
 
 
 class AnimatedSprite(pg.sprite.Sprite):
-    COLORKEY = (255,255,255)
-    #COLORKEY = (34, 177, 76)
+    #COLORKEY = (255,255,255)
+    COLORKEY = (34, 177, 76)
     ANIMATIONS = {}
 
     def __init__(self,screen, *groups):
@@ -98,10 +98,14 @@ class Character(AnimatedSprite):
             self.direction = 'R'
         elif self.vel.x < 0:
             self.direction = 'L'
-            self.image = pg.transform.flip(self.image, True, False)
 
     def get_hit(self, damage):
         self.health -= damage
+
+    def animate(self):
+        super().animate()
+        if self.direction == 'L':
+            self.image = pg.transform.flip(self.active_anim.get_frame(self.elapsed_time),True,False)
 
     def move(self):
         pass
@@ -144,7 +148,7 @@ class Character(AnimatedSprite):
                 self.character_attack.align(self) # good enough for now, mb has to be reworked for ranged attacks
 
         else:
-            if self.character_attack: #additional check to kill charge (if bug occurs)
+            if self.character_attack: #additional check to kill attack (if bug occurs)
                 self.character_attack.kill()
                 self.character_attack = None
 

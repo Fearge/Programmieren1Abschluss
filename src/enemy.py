@@ -1,3 +1,5 @@
+import asyncio
+
 from sprites import *
 from attacks import ChargeAttack
 class Enemy(Character):
@@ -83,7 +85,7 @@ class MeleeEnemy(Enemy):
         return self.pos.distance_to(self.charge_target_pos) < 5
 
 
-    def attack_player(self):
+    def attack_player(self): # maybe make this async
         self.charge_target_pos = vec(self.screen.player.pos)
         self.is_attacking = True
         self.character_attack = ChargeAttack(self.screen, 10, self.__str__(), self.screen.attacks)
