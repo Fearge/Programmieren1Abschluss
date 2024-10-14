@@ -16,7 +16,8 @@ class Game:
 
         # set screen
         self.screen = None
-        self.surface = pg.display.set_mode(dim)
+        #self.surface = pg.display.set_mode(dim)
+        self.surface = pg.display.set_mode(dim, pg.FULLSCREEN)
         self.clock = pg.time.Clock()
 
         # current directory

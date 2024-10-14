@@ -47,7 +47,9 @@ class Player(Character):
             "jumping": [("falling", self.vel.y > 0)],
             "falling": [("landing", self.ground_count > 0)],
             "landing": [("walking", self.is_animation_finished() and abs(self.vel.x) > 0),
-                        ("standing", self.is_animation_finished() and abs(self.vel.x) == 0)]
+                        ("standing", self.is_animation_finished() and abs(self.vel.x) == 0)],
+            "keuling": [("standing", self.is_animation_finished())],
+            "walking": [("keuling", self.is_attacking)]
         }
         super().animate()
 
@@ -103,15 +105,15 @@ class Player(Character):
         self.grappling_hook = None
 
     def handle_events(self, event):
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_SPACE and self.attack_cooldown == 0:
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if event.button == 1 and self.attack_cooldown == 0: #attack on left mouse click
                 self.attack()
                 self.attack_cooldown = PLAYER_ATT_COOLDOWN
-            elif event.key == pg.K_e:
+            elif event.button == 0:
                 mouse_pos = self.screen.camera.get_mouse_pos_in_world()
                 self.shoot_hook(mouse_pos)
-        if event.type == pg.KEYUP:
-            if event.key == pg.K_e and self.grappling_hook:
+        elif event.type == pg.MOUSEBUTTONUP:
+            if event.button == 0 and self.grappling_hook:
                 self.stop_pull()
 
 
