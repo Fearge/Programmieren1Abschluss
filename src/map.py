@@ -26,23 +26,27 @@ class Camera:
         self.game = game
         self.width = width
         self.height = height
-        self.camera = pg.Rect(0, 0, width, height)
-        self.lerp_factor = 0.1
+        self.rect = pg.Rect(0, 0, width, height)
+        self.smoothing_factor = 0.1
 
     def apply(self, entity):
-        return entity.rect.move(self.camera.topleft)
+        return entity.rect.move(self.rect.topleft)
     
     def draw(self, surface, group):
         for sprite in group:
             surface.blit(sprite.image, self.apply(sprite))
-    # linear interpolation
-    def lerp(self, start, end, factor):
+
+    # interpolation for camera smoothing
+    def smooth(self, start, end, factor):
         return start + factor * (end - start)
+
+    def get_mouse_pos_in_world(self):
+        return pg.mouse.get_pos() + pg.Vector2(abs(self.rect.x), abs(self.rect.y))
 
     def update(self, target):
         target_x = max(-self.width + self.game.width, min(0, int(self.game.width / 2) - target.rect.centerx))
         target_y = max(-self.height + self.game.height, min(0, int(self.game.height / 2) - target.rect.centery))
 
         # Smoothly interpolate the camera position
-        self.camera.x = self.lerp(self.camera.x, target_x, self.lerp_factor)
-        self.camera.y = self.lerp(self.camera.y, target_y, self.lerp_factor)
+        self.rect.x = self.smooth(self.rect.x, target_x, self.smoothing_factor)
+        self.rect.y = self.smooth(self.rect.y, target_y, self.smoothing_factor)

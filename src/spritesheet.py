@@ -3,9 +3,9 @@ from enum import Enum
 
 
 class Spritesheet:
-	def __init__(self, filename, bg=None):
+	def __init__(self, filename, colorkey=None):
 		self.spritesheet = pg.image.load(filename).convert()
-		self.bg = bg
+		self.colorkey = colorkey
 
 	def get_image(self, frame, scale=None, flip=False):
 		image = self.spritesheet.subsurface(pg.Rect(frame))
@@ -16,8 +16,8 @@ class Spritesheet:
 		if flip:
 			image = pg.transform.flip(image, True, False)
 
-		if self.bg is not None:
-			image.set_colorkey(self.bg)
+		if self.colorkey is not None:
+			image.set_colorkey(self.colorkey)
 
 		return image
 
@@ -28,13 +28,13 @@ class Spritesheet:
 
 
 class Animation:
-	class PlayMode(Enum):
-		NORMAL = 1
-		REVERSED = 2
-		LOOP = 3
-		LOOP_REVERSED = 4
-		LOOP_PINGPONG = 5
-		LOOP_RANDOM = 6
+	# Animation Types
+	NORMAL = 1
+	REVERSED = 2
+	LOOP = 3
+	LOOP_REVERSED = 4
+	LOOP_PINGPONG = 5
+	LOOP_RANDOM = 6
 
 	def __init__(self, frames, frame_duration, mode):
 		# assign animation settings
@@ -58,11 +58,11 @@ class Animation:
 		frame_number = int(state_time/self.frame_duration)
 
 		# set frame number by animation play mode
-		if self.mode == self.PlayMode.NORMAL:
+		if self.mode == self.NORMAL:
 			frame_number = min(len(self.frames) - 1, frame_number)
-		elif self.mode == self.PlayMode.LOOP:
+		elif self.mode == self.LOOP:
 			frame_number = frame_number % len(self.frames)
-		elif self.mode == self.PlayMode.LOOP_PINGPONG:
+		elif self.mode == self.LOOP_PINGPONG:
 			frame_number = frame_number % ((len(self.frames) * 2 ) - 2)
 			if frame_number >= len(self.frames):
 				frame_number = len(self.frames) - 2 - (frame_number - len(self.frames))

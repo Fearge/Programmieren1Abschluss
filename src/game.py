@@ -1,6 +1,7 @@
 import pygame as pg
 import sys
 
+
 from os import path
 
 class Game:
@@ -21,22 +22,16 @@ class Game:
         # current directory
         self.dir = path.dirname(__file__)
 
-    def draw_text(self, x, y, font, color, text):
-        surface = font.render(text, True, color)
-        rect = surface.get_rect()
-        rect.midtop = (x, y)
-        self.surface.blit(surface, rect)
-
     def set_screen(self, scr):
         # delete existing
-        if self.screen != None:
+        if self.screen is not None:
             del self.screen
             self.screen = None
 
         self.screen = scr
 
         # show new screen
-        if (self.screen != None):
+        if self.screen is not None:
             self.screen.run()
 
     def quit(self):
@@ -50,3 +45,7 @@ class Game:
             if e.type == pg.QUIT:
                 self.quit()
             self.screen.player.handle_events(e)
+
+            for enemie in self.screen.enemies:
+                enemie.handle_events(e)
+

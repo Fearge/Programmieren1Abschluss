@@ -2,7 +2,7 @@ from constants import *
 from game import Game
 from os import path
 
-from screen import Screen
+from screen import Screen, StartScreen
 
 
 class Launcher(Game):
@@ -14,11 +14,13 @@ class Launcher(Game):
         self.map_dir = path.join(self.dir, 'assets', 'map')
 
         # settings
-        self.fps = 60
+        self.fps = FPS
 
     def start(self):
-        screen = Screen(self)
+        screen = StartScreen(self)
         self.set_screen(screen)
+
+
 
 
 if __name__ == '__main__':
