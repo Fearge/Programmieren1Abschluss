@@ -9,6 +9,7 @@ class GrapplingHook(pg.sprite.Sprite):
         self.is_shooting = False
         self.is_attached = False
         self.path = []
+        self.sprite_type = 'grappling_hook'
         self.image = pg.Surface((10, 10))
         self.rect = pg.Rect(pos, (10, 10))  # Example size, adjust as needed
         self.rect.midbottom = self.pos

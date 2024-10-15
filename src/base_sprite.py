@@ -1,12 +1,13 @@
 import pygame as pg
 from constants import *
+from src import Sprite
 from src.spritesheet import Spritesheet
 from os import path
 
 vec = pg.math.Vector2
 
 
-class AnimatedSprite(pg.sprite.Sprite):
+class AnimatedSprite(Sprite):
     #COLORKEY = (255,255,255)
     COLORKEY = (34, 177, 76)
     ANIMATIONS = {}
@@ -66,7 +67,7 @@ class AnimatedSprite(pg.sprite.Sprite):
         return self.active_anim.is_animation_finished(self.elapsed_time)
 
     def update(self):
-        self.elapsed_time += 1/self.screen.game.fps
+        self.elapsed_time += 1/self.screen.game.ticks
         self.animate()
 
 
@@ -82,6 +83,7 @@ class Character(AnimatedSprite):
         self.character_attack = None
         self.is_attacking = False
         self.attack_cooldown = 0
+        self.sprite_type = 'character'
 
         # physics
         self.ground_count = 0

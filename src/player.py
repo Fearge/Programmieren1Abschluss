@@ -3,11 +3,10 @@
 #----------------------------
 
 
-from statistics import NormalDist
-
 from base_sprite import *
 from spritesheet import Animation
 from attacks import PlayerAttack
+from src import Sprite
 from src.grapple import GrapplingHook
 
 
@@ -17,8 +16,6 @@ class Player(Character):
         'walking': (WALKING_FRAMES, 0.6, Animation.LOOP),
         'standing': (STANDING_FRAMES, 0.80, LOOP),
         'jumping': (JUMPING_FRAMES, 0.80, NORMAL),
-        'falling': (FALLING_FRAMES, 0.80, NORMAL),
-        'landing': (LANDING_FRAMES, 0.80, NORMAL),
         'enemy_walking': (ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
         'keuling': (KEULING_FRAMES, 0.6, NORMAL),
         'swooshing': (SWOOSHING_FRAMES, 0.6, NORMAL)
@@ -47,12 +44,9 @@ class Player(Character):
 
     def animate(self):
         self.transitions = {
-            "walking": [("standing", self.vel.x == 0), ("jumping", self.vel.y < 0),("keuling", self.is_attacking)],
-            "standing": [("walking", abs(self.vel.x) > 0), ("jumping", self.vel.y < 0),("keuling", self.is_attacking)],
-            "jumping": [("falling", self.vel.y > 0),("keuling", self.is_attacking)],
-            "falling": [("landing", self.ground_count > 0),("keuling", self.is_attacking)],
-            "landing": [("walking", self.is_animation_finished() and abs(self.vel.x) > 0),
-                        ("standing", self.is_animation_finished() and abs(self.vel.x) == 0),("keuling", self.is_attacking)],
+            "walking": [("standing", self.vel.x == 0), ("jumping", self.vel.y != 0),("keuling", self.is_attacking)],
+            "standing": [("walking", abs(self.vel.x) > 0), ("jumping", self.vel.y != 0),("keuling", self.is_attacking)],
+            "jumping": [("jumping", self.vel.y != 0),("standing",self.ground_count),("keuling", self.is_attacking)],
             "keuling": [("standing", self.character_attack is None)]
         }
         super().animate()
@@ -85,7 +79,6 @@ class Player(Character):
         self.character_attack = PlayerAttack(self.screen, 10, self.__str__(), self.screen.attacks)
         self.character_attack.align(self)
         self.is_attacking = True
-        print('attack')
 
     def is_attack_finished(self):
         return self.character_attack.attack_duration > self.attack_cooldown
@@ -134,9 +127,10 @@ class Player(Character):
 
 
 
-class Obstacle(pg.sprite.Sprite):
+class Obstacle(Sprite):
     def __init__(self, pos, size, *groups):
         super().__init__(groups)
+        self.sprite_type = 'obstacle'
 
         # rect
         self.rect = pg.Rect(pos, size)

@@ -4,6 +4,9 @@ import sys
 
 from os import path
 
+from src.screen import PauseScreen
+
+
 class Game:
     def __init__(self, title, dim):
         # initialize pygame
@@ -35,6 +38,33 @@ class Game:
         if self.screen is not None:
             self.screen.run()
 
+    def save_state(self):
+        self.saved_state = {
+            'player': {
+                'pos': self.screen.player.pos,
+                'vel': self.screen.player.vel,
+                'health': self.screen.player.health,
+            },
+            'enemies': [
+                {
+                    'pos': enemy.pos,
+                    'vel': enemy.vel,
+                    'health': enemy.health,
+                } for enemy in self.screen.enemies
+            ],
+            # Add other game state attributes as needed
+        }
+
+    def load_state(self):
+        if hasattr(self, 'saved_state'):
+            self.screen.player.pos = self.saved_state['player']['pos']
+            self.screen.player.vel = self.saved_state['player']['vel']
+            self.screen.player.health = self.saved_state['player']['health']
+            for enemy, state in zip(self.screen.enemies, self.saved_state['enemies']):
+                enemy.pos = state['pos']
+                enemy.vel = state['vel']
+                enemy.health = state['health']
+
     def quit(self):
         # exit
         pg.quit()
@@ -45,10 +75,11 @@ class Game:
         for e in pg.event.get():
             if e.type == pg.QUIT:
                 self.quit()
-            self.screen.player.handle_events(e)
 
+            self.screen.handle_events(e)
+            """self.screen.player.handle_events(e)
             for enemy in self.screen.enemies:
-                enemy.handle_events(e)
+                enemy.handle_events(e)"""
 
 
 

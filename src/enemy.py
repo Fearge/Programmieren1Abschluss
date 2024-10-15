@@ -1,6 +1,9 @@
-from sprites import *
+from player import *
 from attacks import ChargeAttack
 from health_bar import HealthBar
+import asyncio
+import threading
+
 class Enemy(Character):
     # implement colorkey if needed, standard: (34, 177, 76)
     ANIMATIONS = {
@@ -61,6 +64,14 @@ class Enemy(Character):
         self.health_bar.update(self.health)
         self.rect.midbottom = self.pos
 
+def start_event_loop(loop):
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
+
+# Create a new event loop
+event_loop = asyncio.new_event_loop()
+# Start the event loop in a new thread
+threading.Thread(target=start_event_loop, args=(event_loop,), daemon=True).start()
 
 class MeleeEnemy(Enemy):
     def __init__(self, screen, pos, *groups):
@@ -87,7 +98,6 @@ class MeleeEnemy(Enemy):
     def is_attack_finished(self):
         return self.pos.distance_to(self.charge_target_pos) < 5
 
-
     def attack_player(self): # maybe make this async
         self.charge_target_pos = vec(self.screen.player.pos)
         self.is_attacking = True
@@ -105,16 +115,26 @@ class MeleeEnemy(Enemy):
     def update(self):
         super().update()
 
-
-"""class Boss(Enemy):
+class RangedEnemy(Enemy):
     def __init__(self, screen, pos, *groups):
         super().__init__(screen, pos, groups)
         self.range_threshold = 300
-        
-    def attack1(self):
-        pass
-    
-    def attack2(self):
+
+    def attack_player(self):
         pass
 
-    """
+    def move(self):
+        super().move()
+
+    def is_attack_finished(self):
+        pass
+
+    def handle_events(self, event):
+        if event.type == pg.USEREVENT:
+            if event.dict.get('enemy') == self.id and self.attack_cooldown == 0:
+                print('player near')
+                self.attack_player()
+                self.attack_cooldown = ENEMY_RANGED_COOLDOWN
+
+    def update(self):
+        super().update()
