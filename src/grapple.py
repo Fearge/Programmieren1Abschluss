@@ -20,6 +20,6 @@ class GrapplingHook(pg.sprite.Sprite):
 
     def update(self):
         self.pos += self.vel
-        self.rect.midbottom = self.pos
         if self.is_shooting and not self.is_attached:
             self.path.append(self.pos)
+        self.rect.midbottom = self.pos

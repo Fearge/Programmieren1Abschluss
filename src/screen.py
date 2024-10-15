@@ -8,7 +8,7 @@ from collisions import *
 from map import TiledMap, Camera
 from player import Obstacle, Player
 from src.attacks import ChargeAttack, PlayerAttack
-from src.enemy import MeleeEnemy, Enemy
+from src.enemy import MeleeEnemy, Enemy, RangedEnemy
 from health_bar import HealthBar
 from src.grapple import GrapplingHook
 
@@ -20,7 +20,6 @@ class Screen:
         self.enemies_health_bars = []
         self.load()
         self.new()
-        self.quadtree = Quadtree(0, pg.Rect(0, 0, WIDTH, HEIGHT))
 
     def load(self):
         #  prepare map
@@ -43,19 +42,25 @@ class Screen:
             elif obj.name == 'obstacle':
                 Obstacle((obj.x, obj.y), (obj.width, obj.height), self.obstacles)
             elif obj.name == 'melee_enemy':
-                enemy = MeleeEnemy(self, obj_midbottom, self.enemies)
-                self.character_sprites.add(enemy)
+                rangedEnemy = RangedEnemy(self, obj_midbottom, self.enemies)
+                self.character_sprites.add(rangedEnemy)
+            elif obj.name == 'ranged_enemy':
+                meleeEnemy = MeleeEnemy(self, obj_midbottom, self.enemies)
+                self.character_sprites.add(meleeEnemy)
+
         self.camera = Camera(self.game, self.map.width, self.map.height)
 
     def run(self):
         while True:
-            self.game.clock.tick(self.game.ticks)
             self.game.events()
             self.update()
             self.display()
+            self.game.clock.tick(self.game.ticks)
 
     def update(self):
         self.character_sprites.update()
+        self.attacks.update()
+        self.hooks.update()
         self.check_collisions()
         self.camera.update(self.player)
         self.health_bar.update(self.player.health)
@@ -89,34 +94,6 @@ class Screen:
         pg.display.flip()
 
     def check_collisions(self):
-        self.quadtree.clear()
-        all_sprites = chain(self.character_sprites, self.obstacles, self.attacks, self.hooks)
-        for sprite in all_sprites:
-            self.quadtree.insert(sprite)
-
-
-        for sprite in self.character_sprites:
-            potential_collisions = self.quadtree.retrieve([], sprite.rect)
-            for other in potential_collisions:
-                if sprite != other and pg.sprite.collide_rect(sprite, other):
-                    if sprite.sprite_type == 'character' and other.sprite_type == 'obstacle':
-                        collide_with_obstacles(sprite, other)
-                    if sprite.sprite_type == 'character' and other.sprite_type == 'attack':
-                        print('attack detected')
-                        attack_collision(other, sprite)
-        for sprite in self.hooks:
-            potential_collisions = self.quadtree.retrieve([], sprite.rect)
-            for other in potential_collisions:
-                if sprite != other and pg.sprite.collide_rect(sprite, other):
-                    if sprite.sprite_type == 'grappling_hook' and other.sprite_type == 'obstacle':
-                        hook_collision(sprite)
-                    """if isinstance(sprite, Attack) and isinstance(other, Character):
-                        attack_collision(sprite, other)
-                    if isinstance(sprite, GrapplingHook) and isinstance(other, Obstacle):
-                        hook_collision(sprite)"""
-
-
-    """def check_collisions(self):
         # PLAYER COLLISIONS
         # collision with obstacles
         hits = pg.sprite.spritecollide(self.player, self.obstacles, False)
@@ -139,7 +116,7 @@ class Screen:
             if not hook.is_attached:
                 hits = pg.sprite.spritecollide(hook, self.obstacles, False)
                 if hits:
-                    hook_collision(hook)"""
+                    hook_collision(hook)
 
 class StartScreen:
     def __init__(self, game):
@@ -155,7 +132,7 @@ class StartScreen:
         self.game.surface.fill((50, 50, 50))
 
         # Titeltext zeichnen
-        title_surface = self.font.render("Programmieren 1", True, (255, 255, 255))
+        title_surface = self.font.render("HUGO 2", True, (255, 255, 255))
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 5 * 2))
         self.game.surface.blit(title_surface, title_rect)
 

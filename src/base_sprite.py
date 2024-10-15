@@ -1,7 +1,7 @@
 import pygame as pg
 from constants import *
 from src import Sprite
-from src.spritesheet import Spritesheet
+from src.spritesheet import Spritesheet, Animation
 from os import path
 
 vec = pg.math.Vector2
@@ -72,7 +72,6 @@ class AnimatedSprite(Sprite):
 
 
 class Character(AnimatedSprite):
-
     def __init__(self, screen, pos,  *groups):
         super().__init__(screen,groups)
 
@@ -103,6 +102,10 @@ class Character(AnimatedSprite):
 
     def get_hit(self, damage):
         self.health -= damage
+        self.show_hit_particles()
+
+    def show_hit_particles(self):
+        """particles = pg.image.load(path.join(self.screen.game.img_dir, 'hit.png')).convert()"""
 
     def animate(self):
         super().animate()
@@ -114,6 +117,8 @@ class Character(AnimatedSprite):
 
     def is_attack_finished(self):
         pass
+
+
 
     def update(self):
         super().update()
@@ -133,8 +138,8 @@ class Character(AnimatedSprite):
         if abs(self.vel.x) < 0.5:
             self.vel.x = 0
 
-        if self.vel.y > 10:
-            self.vel.y = 10
+        if self.vel.y > PLAYER_MAX_FALL_SPEED:
+            self.vel.y = PLAYER_MAX_FALL_SPEED
 
         if self.health == 0:
             self.kill()
@@ -144,17 +149,15 @@ class Character(AnimatedSprite):
         if self.is_attacking:
             if self.is_attack_finished():
                 self.is_attacking = False
-                if self.character_attack:
-                    self.character_attack.kill()
-                    self.character_attack = None
-            elif self.character_attack:
-                self.character_attack.update()
-                self.character_attack.align(self) # good enough for now, mb has to be reworked for ranged attacks
-
-        else:
-            if self.character_attack: #additional check to kill attack (if bug occurs)
                 self.character_attack.kill()
                 self.character_attack = None
+            elif self.character_attack:
+                self.character_attack.align(self) # good enough for now, mb has to be reworked for ranged attacks
+
+        """else:
+            if self.character_attack: #additional check to kill attack (if bug occurs)
+                self.character_attack.kill()
+                self.character_attack = None"""
 
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1

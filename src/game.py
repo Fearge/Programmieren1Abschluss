@@ -4,6 +4,7 @@ import sys
 
 from os import path
 
+from src.constants import TICKS
 from src.screen import PauseScreen
 
 

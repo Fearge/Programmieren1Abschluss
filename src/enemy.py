@@ -1,14 +1,12 @@
 from player import *
-from attacks import ChargeAttack
+from attacks import ChargeAttack,ShootAttack
 from health_bar import HealthBar
 import asyncio
-import threading
+
+
 
 class Enemy(Character):
     # implement colorkey if needed, standard: (34, 177, 76)
-    ANIMATIONS = {
-            'enemy_walking': (ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
-        }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):
         super().__init__(screen, pos,groups)
@@ -68,12 +66,10 @@ def start_event_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
 
-# Create a new event loop
-event_loop = asyncio.new_event_loop()
-# Start the event loop in a new thread
-threading.Thread(target=start_event_loop, args=(event_loop,), daemon=True).start()
-
 class MeleeEnemy(Enemy):
+    ANIMATIONS = {
+        'enemy_walking': (MELEE_ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
+    }
     def __init__(self, screen, pos, *groups):
         self.charge_target_pos = (0,0)
         super().__init__(screen, pos, groups)
@@ -116,18 +112,24 @@ class MeleeEnemy(Enemy):
         super().update()
 
 class RangedEnemy(Enemy):
+    ANIMATIONS = {
+        'enemy_walking': (RANGED_ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
+    }
     def __init__(self, screen, pos, *groups):
         super().__init__(screen, pos, groups)
         self.range_threshold = 300
 
     def attack_player(self):
-        pass
+        direction = self.screen.player.pos - self.pos
+        self.character_attack = ShootAttack(self.screen, self.rect.center, direction, 5,self.__str__(), self.screen.attacks)
 
     def move(self):
-        super().move()
+        if self.is_attacking:
+            self.vel = vec(0,0)
+        else: super().move()
 
     def is_attack_finished(self):
-        pass
+        return self.character_attack.pos.x == WIDTH or 0
 
     def handle_events(self, event):
         if event.type == pg.USEREVENT:
