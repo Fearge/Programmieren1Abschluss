@@ -38,6 +38,11 @@ class Player(Character):
         self.width = self.rect.right - self.rect.left
         self.height = self.rect.top - self.rect.bottom
 
+        #sounds
+        self.attack_sound = PUNCH_SOUND_PATH
+        self.hit_sound = HUGO_OUCH_SOUND_PATH
+        self.death_sound = HUGO_DEATH_SOUND_PATH
+
 
 
 
@@ -69,6 +74,7 @@ class Player(Character):
                     self.vel.y = PLAYER_JUMP
                     self.ground_count = 0
                     self.jump_release = 0
+                    self.screen.game.music.play_sound(HUGO_JUMP_SOUND_PATH)
 
         else:
             self.jump_release += 1
@@ -78,6 +84,7 @@ class Player(Character):
         self.character_attack = PlayerAttack(self.screen, 10, self.__str__(), self.screen.attacks)
         self.character_attack.align(self)
         self.is_attacking = True
+        super().attack()
 
     def is_attack_finished(self):
         return self.character_attack.attack_duration > self.attack_cooldown
@@ -88,6 +95,7 @@ class Player(Character):
             self.grappling_hook.is_shooting = True
             self.grappling_hook.vel = (target_pos - self.grappling_hook.pos).normalize() * SHOOT_SPEED
             self.hook_cooldown = PLAYER_HOOK_COOLDOWN
+            self.screen.game.music.play_sound(GRAPPLE_SHOOT_SOUND_PATH)
 
 
     def pull(self):

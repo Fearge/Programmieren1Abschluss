@@ -2,6 +2,9 @@ from itertools import chain
 
 import pygame as pg
 from os import path
+
+from pygame import FULLSCREEN
+
 from constants import *
 
 from collisions import *
@@ -52,12 +55,11 @@ class Screen:
         self.camera = Camera(self.game, self.map.width, self.map.height)
 
     def handle_events(self, e):
-        if e.type == pg.KEYDOWN:
-            if e.key == pg.K_ESCAPE:
-                self.game.set_screen(PauseScreen(self.game))
         self.player.handle_events(e)
         for enemy in self.enemies:
             enemy.handle_events(e)
+
+
 
     def display(self):
         self.game.surface.blit(self.map_img, self.camera.apply(self.map))
@@ -100,7 +102,7 @@ class Screen:
             if not hook.is_attached:
                 hits = pg.sprite.spritecollide(hook, self.obstacles, False)
                 if hits:
-                    hook_collision(hook)
+                    hook_collision(hook, self)
 
     def run(self):
         while True:
@@ -122,14 +124,19 @@ class Screen:
         if self.player.health <= 0 or self.player.pos.y > self.map.height + 100:
             self.game.set_screen(DeathScreen(self.game))
 
+
+
+
 class StartScreen:
     def __init__(self, game):
         self.game = game
         self.font = pg.font.Font(None, 130)  # Verwende eine Standard-Schriftart
-        self.button_font = pg.font.Font(None, 80)
+        self.start_button_font = pg.font.Font(None, 80)
+        self.fullscreen_button_font = pg.font.Font(None, 40)
         self.button_color = (255, 255, 255)  # Weiß
         self.hover_color = (200, 200, 200)  # Hellgrau
         self.start_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 5 * 3), (200, 100))  # Button-Rechteck
+        self.fullscreen_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 5 * 4), (200, 100))  # Fullscreen button rectangle
 
     def draw(self):
         # Hintergrundeinstellung (z. B. schwarz)
@@ -144,21 +151,38 @@ class StartScreen:
         button_color = self.hover_color if self.start_button_rect.collidepoint(pg.mouse.get_pos()) else self.button_color
         pg.draw.rect(self.game.surface, button_color, self.start_button_rect)
 
-        button_text_surface = self.button_font.render("Start", True, (0, 0, 0))  # Textfarbe schwarz
+        button_text_surface = self.start_button_font.render("Start", True, (0, 0, 0))  # Textfarbe schwarz
         button_text_rect = button_text_surface.get_rect(center=self.start_button_rect.center)
         self.game.surface.blit(button_text_surface, button_text_rect)
 
+        # Draw fullscreen toggle button
+        button_color = self.hover_color if self.fullscreen_button_rect.collidepoint(pg.mouse.get_pos()) else self.button_color
+        pg.draw.rect(self.game.surface, button_color, self.fullscreen_button_rect)
+
+        button_text_surface = self.fullscreen_button_font.render("Fullscreen", True, (0, 0, 0))  # Black text
+        button_text_rect = button_text_surface.get_rect(center=self.fullscreen_button_rect.center)
+        self.game.surface.blit(button_text_surface, button_text_rect)
+
         pg.display.flip()  # Aktualisiere den Bildschirm
+
+    def toggle_fullscreen(self):
+        if self.game.fullscreen:
+            pg.display.set_mode((WIDTH, HEIGHT))
+        else:
+            pg.display.set_mode((WIDTH, HEIGHT), pg.FULLSCREEN)
+        self.game.fullscreen = not self.game.fullscreen
 
     def handle_events(self, event):
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:  # Linke Maustaste
                 if self.start_button_rect.collidepoint(pg.mouse.get_pos()):  # Überprüfen, ob der Button geklickt wurde
                     self.game.set_screen(Screen(self.game))  # Zum Hauptspiel wechseln
-
+                elif self.fullscreen_button_rect.collidepoint(pg.mouse.get_pos()):  # Check if the fullscreen button was clicked
+                    self.toggle_fullscreen()
     def run(self):
         while True:
             self.game.events()
             self.draw()
+
 
 class DeathScreen:
     def __init__(self, game):
@@ -217,75 +241,3 @@ class DeathScreen:
     def restart_game(self):
         # Hier wird der Bildschirm auf das Spiel zurückgesetzt
         self.game.set_screen(Screen(self.game))  # Setze das Hauptspiel wieder als aktiven Bildschirm
-
-
-class PauseScreen():
-    def __init__(self, game):
-        self.game = game
-        self.surface = game.surface
-        self.clock = pg.time.Clock()
-
-        # Colors and fonts
-        self.font = pg.font.Font(None, 150)  # Standard pygame font for "Paused"
-        self.button_font = pg.font.Font(None, 80)  # Same font size as the "Start" button
-        self.paused_color = (255, 255, 255)  # White for "Paused"
-        self.button_color = (255, 255, 255)  # White for the button
-        self.button_hover_color = (200, 200, 200)
-
-        # Text positions
-        self.paused_text = self.font.render("Paused", True, self.paused_color)
-        self.paused_rect = self.paused_text.get_rect(
-            center=(self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
-
-        # Button
-        self.button_text = self.button_font.render("Resume", True, self.button_color)
-        self.button_rect = pg.Rect(0, 0, 250, 100)  # Same button size as the "Start" button
-        self.button_rect.center = (self.surface.get_width() // 2, self.surface.get_height() // 1.5)
-
-
-    def run(self):
-        while True:
-            self.handle_events()
-            self.display()
-            self.clock.tick(self.game.ticks)
-
-    def display(self):
-        # Background
-        self.surface.fill((0, 0, 0))  # Black background
-
-        # Paused text
-        self.surface.blit(self.paused_text, self.paused_rect)
-
-        # Button with hover effect
-        mouse_pos = pg.mouse.get_pos()
-        if self.button_rect.collidepoint(mouse_pos):
-            # Button hover
-            pg.draw.rect(self.surface, self.button_hover_color, self.button_rect)  # Gray button on hover
-            button_text = self.button_font.render("Resume", True, (0, 0, 0))  # Black text on hover
-        else:
-            pg.draw.rect(self.surface, self.button_color, self.button_rect)  # White button
-            button_text = self.button_font.render("Resume", True, (0, 0, 0))  # Black text
-
-        self.surface.blit(button_text, button_text.get_rect(center=self.button_rect.center))
-
-        # Update
-        pg.display.flip()
-
-    def handle_events(self):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                quit()
-
-            elif event.type == pg.MOUSEBUTTONDOWN:
-                if self.button_rect.collidepoint(pg.mouse.get_pos()):
-                    self.resume_game()
-
-            elif event.type == pg.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    self.resume_game()
-
-    def resume_game(self):
-        screen = Screen(self.game)
-        screen.game.load_state()
-        self.game.set_screen(screen)

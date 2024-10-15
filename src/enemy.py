@@ -74,6 +74,7 @@ class MeleeEnemy(Enemy):
         self.charge_target_pos = (0,0)
         super().__init__(screen, pos, groups)
         self.range_threshold = 200
+        self.attack_sound = SCREAM_SOUND_PATH
 
     # charge attack
     def move(self):
@@ -94,17 +95,18 @@ class MeleeEnemy(Enemy):
     def is_attack_finished(self):
         return self.pos.distance_to(self.charge_target_pos) < 5
 
-    def attack_player(self): # maybe make this async
+    def attack(self): # maybe make this async
         self.charge_target_pos = vec(self.screen.player.pos)
         self.is_attacking = True
         self.character_attack = ChargeAttack(self.screen, 10, self.__str__(), self.screen.attacks)
         self.character_attack.align(self)
+        super().attack()
 
     def handle_events(self, event):
         if event.type == pg.USEREVENT:
             if event.dict.get('enemy') == self.id and self.attack_cooldown == 0:
                 print('player near')
-                self.attack_player()
+                self.attack()
                 self.is_attacking = True
                 self.attack_cooldown = ENEMY_CHARGE_COOLDOWN  # Cooldown period before the next attack
 
@@ -118,10 +120,14 @@ class RangedEnemy(Enemy):
     def __init__(self, screen, pos, *groups):
         super().__init__(screen, pos, groups)
         self.range_threshold = 300
+        self.attack_sound = LASER_SOUND_PATH
+        self.hit_sound = ENEMY_OUCH_SOUND_PATH
+        self.death_sound = ENEMY_DEATH_SOUND_PATH
 
-    def attack_player(self):
+    def attack(self):
         direction = self.screen.player.pos - self.pos
         self.character_attack = ShootAttack(self.screen, self.rect.center, direction, 5,self.__str__(), self.screen.attacks)
+        super().attack()
 
     def move(self):
         if self.is_attacking:
@@ -135,7 +141,7 @@ class RangedEnemy(Enemy):
         if event.type == pg.USEREVENT:
             if event.dict.get('enemy') == self.id and self.attack_cooldown == 0:
                 print('player near')
-                self.attack_player()
+                self.attack()
                 self.attack_cooldown = ENEMY_RANGED_COOLDOWN
 
     def update(self):

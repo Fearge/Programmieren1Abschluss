@@ -1,6 +1,6 @@
+
 from src.attacks import Attack
 from src.base_sprite import Character, vec
-import pygame as pg
 from constants import *
 def collide_with_obstacles(character, hit):
     # character's bottom and obstacle top
@@ -37,6 +37,7 @@ def attack_collision(attack: Attack, character: Character):
         attack.has_hit = True
         attack.kill()
 
-def hook_collision(hook):
+def hook_collision(hook, screen):
     hook.vel = vec(0, 0)
     hook.is_attached = True
+    screen.game.music.play_sound(GRAPPLE_CONNECT_SOUND_PATH)

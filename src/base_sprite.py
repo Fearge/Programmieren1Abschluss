@@ -1,4 +1,6 @@
 import pygame as pg
+from pygame.examples.cursors import image
+
 from constants import *
 from src import Sprite
 from src.spritesheet import Spritesheet, Animation
@@ -91,6 +93,10 @@ class Character(AnimatedSprite):
         self.particles_duration = 0.5
         self.particles_elapsed_time = 0
 
+        #music
+        self.attack_sound = None
+        self.hit_sound = None
+        self.death_sound = None
 
         # physics
         self.ground_count = 0
@@ -111,11 +117,14 @@ class Character(AnimatedSprite):
     def get_hit(self, damage):
         self.health -= damage
         self.show_hit_particles()
+        self.screen.game.music.play_sound(self.hit_sound)
 
     def show_hit_particles(self):
-        Particle(self.screen, self.rect.center, self.screen.particles)
-        self.image = pg.transform.scale(self.image, (self.rect.width*2, self.rect.height*2))
+        particle = Particle(self.screen, self.rect.center, self.screen.particles)
+        pg.transform.scale(particle.image, (self.rect.width*2, self.rect.height*2))
 
+    def attack(self):
+        self.screen.game.music.play_sound(self.attack_sound)
 
     def animate(self):
         super().animate()
@@ -148,8 +157,10 @@ class Character(AnimatedSprite):
         if self.vel.y > PLAYER_MAX_FALL_SPEED:
             self.vel.y = PLAYER_MAX_FALL_SPEED
         if self.health == 0:
+            self.screen.game.music.play_sound(self.death_sound)
             self.kill()
             self.alive = False
+
 
         #attack handling
         if self.is_attacking:
@@ -157,12 +168,9 @@ class Character(AnimatedSprite):
                 self.is_attacking = False
                 self.character_attack.kill()
                 self.character_attack = None
+                self.screen.game.music.stop_sound(self.attack_sound)
             elif self.character_attack:
                 self.character_attack.align(self) # good enough for now, mb has to be reworked for ranged attacks
-        """else:
-            if self.character_attack: #additional check to kill attack (if bug occurs)
-                self.character_attack.kill()
-                self.character_attack = None"""
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
         if self.particles_duration > self.particles_elapsed_time:

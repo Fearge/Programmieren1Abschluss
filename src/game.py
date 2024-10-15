@@ -4,15 +4,14 @@ import sys
 
 from os import path
 
-from src.constants import TICKS
-from src.screen import PauseScreen
+from src.constants import *
+from src.music import Music
 
 
 class Game:
     def __init__(self, title, dim):
         # initialize pygame
         pg.init()
-        pg.mixer.init()
         pg.display.set_caption(title)
 
         self.width = dim[0]
@@ -20,12 +19,19 @@ class Game:
 
         # set screen
         self.screen = None
+        self.fullscreen = False
         self.surface = pg.display.set_mode(dim)
-        #self.surface = pg.display.set_mode(dim, pg.FULLSCREEN)
         self.clock = pg.time.Clock()
+        self.paused = False
 
         # current directory
         self.dir = path.dirname(__file__)
+
+        # load and play Music
+        self.music = Music()
+        self.music.load_music(path.join(self.dir, 'assets', 'mus', BACKGROUNDMUSIC_PATH))
+        self.music.play_music()
+
 
     def set_screen(self, scr):
         # delete existing
@@ -39,33 +45,6 @@ class Game:
         if self.screen is not None:
             self.screen.run()
 
-    def save_state(self):
-        self.saved_state = {
-            'player': {
-                'pos': self.screen.player.pos,
-                'vel': self.screen.player.vel,
-                'health': self.screen.player.health,
-            },
-            'enemies': [
-                {
-                    'pos': enemy.pos,
-                    'vel': enemy.vel,
-                    'health': enemy.health,
-                } for enemy in self.screen.enemies
-            ],
-            # Add other game state attributes as needed
-        }
-
-    def load_state(self):
-        if hasattr(self, 'saved_state'):
-            self.screen.player.pos = self.saved_state['player']['pos']
-            self.screen.player.vel = self.saved_state['player']['vel']
-            self.screen.player.health = self.saved_state['player']['health']
-            for enemy, state in zip(self.screen.enemies, self.saved_state['enemies']):
-                enemy.pos = state['pos']
-                enemy.vel = state['vel']
-                enemy.health = state['health']
-
     def quit(self):
         # exit
         pg.quit()
@@ -76,11 +55,12 @@ class Game:
         for e in pg.event.get():
             if e.type == pg.QUIT:
                 self.quit()
+            elif e.type == pg.KEYDOWN:
+                if e.key == pg.K_ESCAPE:
+                    self.quit()
 
             self.screen.handle_events(e)
-            """self.screen.player.handle_events(e)
-            for enemy in self.screen.enemies:
-                enemy.handle_events(e)"""
+
 
 
 

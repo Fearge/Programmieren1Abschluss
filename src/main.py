@@ -2,12 +2,12 @@ from constants import *
 from game import Game
 from os import path
 
-from screen import Screen, StartScreen
+from screen import StartScreen
 
 
 class Launcher(Game):
     def __init__(self):
-        super().__init__('CameraDemo', (WIDTH, HEIGHT))
+        super().__init__('HUGO 2', (WIDTH, HEIGHT))
 
         # asset directories
         self.img_dir = path.join(self.dir, 'assets', 'img')
