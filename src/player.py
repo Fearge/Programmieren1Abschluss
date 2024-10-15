@@ -17,7 +17,7 @@ class Player(Character):
         'jumping': (JUMPING_FRAMES, 0.80, NORMAL),
         'enemy_walking': (MELEE_ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
         'keuling': (KEULING_FRAMES, 0.6, NORMAL),
-        'swooshing': (SWOOSHING_FRAMES, 0.6, NORMAL)
+        'swooshing': (SWOOSHING_FRAMES, 0.6, NORMAL),
     }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):

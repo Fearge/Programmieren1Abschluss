@@ -64,7 +64,6 @@ class ShootAttack(Attack):
         pass
 
     def update(self):
-        print(self.direction)
         self.pos += self.direction * 10
         self.rect.center = self.pos
         super().update()

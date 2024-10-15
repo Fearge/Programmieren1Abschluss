@@ -33,6 +33,7 @@ class Screen:
         self.obstacles = pg.sprite.Group()
         self.attacks = pg.sprite.Group()
         self.hooks = pg.sprite.Group()
+        self.particles = pg.sprite.Group()
 
 
         for obj in self.map.tmx_data.objects:
@@ -50,23 +51,6 @@ class Screen:
 
         self.camera = Camera(self.game, self.map.width, self.map.height)
 
-    def run(self):
-        while True:
-            self.game.events()
-            self.update()
-            self.display()
-            self.game.clock.tick(self.game.ticks)
-
-    def update(self):
-        self.character_sprites.update()
-        self.attacks.update()
-        self.hooks.update()
-        self.check_collisions()
-        self.camera.update(self.player)
-        self.health_bar.update(self.player.health)
-        if self.player.health <= 0 or self.player.pos.y > self.map.height + 100:
-            self.game.set_screen(DeathScreen(self.game))
-
     def handle_events(self, e):
         if e.type == pg.KEYDOWN:
             if e.key == pg.K_ESCAPE:
@@ -77,19 +61,19 @@ class Screen:
 
     def display(self):
         self.game.surface.blit(self.map_img, self.camera.apply(self.map))
+        self.camera.draw(self.game.surface, self.character_sprites)
 
+        for particle in self.particles:
+            self.game.surface.blit(particle.image, self.camera.apply(particle))
         for attack in self.attacks:
             self.game.surface.blit(attack.image, self.camera.apply(attack))
         for hook in self.hooks:
             self.game.surface.blit(hook.image, self.camera.apply(hook))
 
-        self.camera.draw(self.game.surface, self.character_sprites)
-
         # health bars
         self.health_bar.draw(self.game.surface, None)  # Draw the health bar
         for enemy in self.enemies:
             enemy.health_bar.draw(self.game.surface, self.camera)
-
 
         pg.display.flip()
 
@@ -117,6 +101,26 @@ class Screen:
                 hits = pg.sprite.spritecollide(hook, self.obstacles, False)
                 if hits:
                     hook_collision(hook)
+
+    def run(self):
+        while True:
+            self.game.events()
+            self.update()
+            self.display()
+            self.game.clock.tick(self.game.ticks)
+
+    def update(self):
+        #update sprites
+        self.particles.update()
+        self.character_sprites.update()
+        self.attacks.update()
+        self.hooks.update()
+
+        self.check_collisions()
+        self.camera.update(self.player)
+        self.health_bar.update(self.player.health)
+        if self.player.health <= 0 or self.player.pos.y > self.map.height + 100:
+            self.game.set_screen(DeathScreen(self.game))
 
 class StartScreen:
     def __init__(self, game):

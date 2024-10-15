@@ -1,5 +1,8 @@
 import pygame as pg
 from pygame.math import Vector2 as vec
+from src.constants import HIT_PARTICLES
+from src.spritesheet import Animation
+
 
 class GrapplingHook(pg.sprite.Sprite):
     def __init__(self, pos, *groups):

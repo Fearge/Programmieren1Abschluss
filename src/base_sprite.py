@@ -9,7 +9,7 @@ vec = pg.math.Vector2
 
 class AnimatedSprite(Sprite):
     #COLORKEY = (255,255,255)
-    COLORKEY = (34, 177, 76)
+    COLORKEY = COLORKEY
     ANIMATIONS = {}
 
     def __init__(self,screen, *groups):
@@ -23,6 +23,7 @@ class AnimatedSprite(Sprite):
         self.animation_storage = {}
         self.transitions = {}
 
+        self.spritesheet = Spritesheet(path.join(self.screen.game.img_dir, SPRITESHEET_PATH), colorkey=self.COLORKEY)
         self.load()
         self.image = self.active_anim.get_frame(0)
         self.rect = self.image.get_rect()
@@ -49,9 +50,8 @@ class AnimatedSprite(Sprite):
         self.elapsed_time = 0
 
     def load(self):
-        spritesheet = Spritesheet(path.join(self.screen.game.img_dir, SPRITESHEET_PATH), colorkey=self.COLORKEY)
         for name, (frames, duration, mode) in self.ANIMATIONS.items():
-            anim = spritesheet.get_animation(frames, duration, mode, scale=0.5)
+            anim = self.spritesheet.get_animation(frames, duration, mode, scale=0.5)
             self.store_animation(name, anim)
 
     def animate(self):
@@ -72,6 +72,9 @@ class AnimatedSprite(Sprite):
 
 
 class Character(AnimatedSprite):
+    ANIMATIONS = {
+        'hit': (HIT_PARTICLES, 0.6, Animation.NORMAL),
+    }
     def __init__(self, screen, pos,  *groups):
         super().__init__(screen,groups)
 
@@ -83,6 +86,11 @@ class Character(AnimatedSprite):
         self.is_attacking = False
         self.attack_cooldown = 0
         self.sprite_type = 'character'
+
+        #hit particles
+        self.particles_duration = 0.5
+        self.particles_elapsed_time = 0
+
 
         # physics
         self.ground_count = 0
@@ -105,7 +113,9 @@ class Character(AnimatedSprite):
         self.show_hit_particles()
 
     def show_hit_particles(self):
-        """particles = pg.image.load(path.join(self.screen.game.img_dir, 'hit.png')).convert()"""
+        Particle(self.screen, self.rect.center, self.screen.particles)
+        self.image = pg.transform.scale(self.image, (self.rect.width*2, self.rect.height*2))
+
 
     def animate(self):
         super().animate()
@@ -122,9 +132,7 @@ class Character(AnimatedSprite):
 
     def update(self):
         super().update()
-
         # apply gravity
-        # self.acc = vec(0, 0)
         self.acc = vec(0, GRAVITY)
         # movement
         self.move()
@@ -137,10 +145,8 @@ class Character(AnimatedSprite):
 
         if abs(self.vel.x) < 0.5:
             self.vel.x = 0
-
         if self.vel.y > PLAYER_MAX_FALL_SPEED:
             self.vel.y = PLAYER_MAX_FALL_SPEED
-
         if self.health == 0:
             self.kill()
             self.alive = False
@@ -153,14 +159,29 @@ class Character(AnimatedSprite):
                 self.character_attack = None
             elif self.character_attack:
                 self.character_attack.align(self) # good enough for now, mb has to be reworked for ranged attacks
-
         """else:
             if self.character_attack: #additional check to kill attack (if bug occurs)
                 self.character_attack.kill()
                 self.character_attack = None"""
-
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
+        if self.particles_duration > self.particles_elapsed_time:
+            self.particles_elapsed_time += 1/self.screen.game.ticks
 
         self.rect.midbottom = self.pos
 
+class Particle(AnimatedSprite):
+    ANIMATIONS = {
+        'particle': (HIT_PARTICLES, 0.6, Animation.NORMAL),
+    }
+    def __init__(self, screen, pos, *groups):
+        super().__init__(screen, groups)
+        self.pos = vec(pos)
+        self.sprite_type = 'particle'
+        self.rect.midbottom = self.pos
+        self.duration = 0.5
+
+    def update(self):
+        self.elapsed_time += 1/self.screen.game.ticks
+        if self.elapsed_time >= self.duration:
+            self.kill()
