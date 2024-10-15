@@ -119,16 +119,14 @@ class Character(AnimatedSprite):
         # apply gravity
         # self.acc = vec(0, 0)
         self.acc = vec(0, GRAVITY)
-
         # movement
         self.move()
-
         # apply friction
         self.acc.x += self.vel.x * FRICTION
-
         # eqns of motions
         self.vel += self.acc
         self.pos += self.vel + 0.5 * self.acc
+
 
         if abs(self.vel.x) < 0.5:
             self.vel.x = 0
@@ -136,9 +134,13 @@ class Character(AnimatedSprite):
         if self.vel.y > 10:
             self.vel.y = 10
 
+        if self.health == 0:
+            self.kill()
+            self.alive = False
+
         #attack handling
         if self.is_attacking:
-            if self.is_attack_finished():  # Adjust threshold as needed
+            if self.is_attack_finished():
                 self.is_attacking = False
                 if self.character_attack:
                     self.character_attack.kill()

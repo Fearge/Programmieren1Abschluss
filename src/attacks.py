@@ -20,9 +20,10 @@ class Attack(AnimatedSprite):
     def attack_duration(self):
         return self.__attack_duration
 
-    def align(self, entity):
-        offset = vec(entity.rect.width, 0) if entity.direction == 'R' else vec(-entity.rect.width, 0)
+    def align(self, entity: Character):
+        offset = vec(entity.rect.width/2, -entity.rect.height/2) if entity.direction == 'R' else vec(-entity.rect.width/2, -entity.rect.height/2)
         self.pos = entity.pos + offset
+        self.image = pg.transform.flip(self.active_anim.get_frame(self.elapsed_time), False, True) # image is wrong way around in spritesheet
         if entity.direction == 'L':
             self.image = pg.transform.flip(self.image, True, False)
 
