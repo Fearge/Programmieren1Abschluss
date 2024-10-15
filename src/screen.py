@@ -138,12 +138,13 @@ class StartScreen:
         self.start_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 5 * 3), (200, 100))  # Button-Rechteck
         self.fullscreen_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 5 * 4), (200, 100))  # Fullscreen button rectangle
 
+        self.background = pg.image.load(path.join(self.game.map_dir, 'HugoMapFinCut.png')).convert()
+
     def draw(self):
         # Hintergrundeinstellung (z. B. schwarz)
-        self.game.surface.fill((50, 50, 50))
-
+        self.game.surface.blit(self.background, (0, 0))
         # Titeltext zeichnen
-        title_surface = self.font.render("HUGO 2", True, (255, 255, 255))
+        title_surface = self.font.render("HUGO 2", True, (255, 128, 40))
         title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 5 * 2))
         self.game.surface.blit(title_surface, title_rect)
 
@@ -189,6 +190,7 @@ class DeathScreen:
         self.game = game
         self.surface = game.surface
         self.clock = pg.time.Clock()
+        self.death_sound = False
 
         # Farben und Schriftarten
         self.font = pg.font.Font(None, 150)  # Standard pygame Schriftart für "Game Over"
@@ -208,6 +210,9 @@ class DeathScreen:
 
     def run(self):
         while True:
+            if not self.death_sound:
+                self.game.music.play_sound(HUGO_DEATH_SOUND_PATH)
+                self.death_sound = True
             self.game.events()
             self.display()
             self.clock.tick(self.game.ticks)
