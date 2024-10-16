@@ -217,6 +217,57 @@ class DeathScreen(BaseScreen):
         # Reset the screen to the game
         self.game.set_screen(Screen(self.game))  # Set the main game as the active screen
 
+class WinScreen(BaseScreen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.win_sound = False
+
+        # Colors and fonts
+        self.win_font = pg.font.Font(None, 150)  # Standard pygame font for "You Win"
+        self.button_font = pg.font.Font(None, 80)  # Same font size as the "Restart" button
+
+        self.win_text_color = (0, 255, 0)  # Green for "You Win"
+        self.button_color = (255, 255, 255)  # White for the button
+        self.button_hover_color = (200, 200, 200)
+
+        # Text positions
+        self.win_text = self.win_font.render("You Win", True, self.win_text_color)
+        self.win_text_rect = self.win_text.get_rect(center=(self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
+
+        # Button
+        self.button_rect = pg.Rect((self.surface.get_width() // 2 - 125, self.surface.get_height() // 1.5), (250, 100))
+
+    def run(self):
+        while True:
+            if not self.win_sound:
+                self.game.music.play_sound(WIN_SOUND_PATH)  # Plays a winning sound effect
+                self.win_sound = True
+            self.game.events()  # Handles events
+            self.display()  # Updates the screen display
+            self.clock.tick(self.game.ticks)
+
+    def display(self):
+        # Background
+        self.surface.fill((0, 0, 0))  # Black background
+
+        # "You Win" text
+        self.draw_text("You Win", self.win_font, self.win_text_color, (self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
+
+        # Button with hover effect
+        self.create_button("Restart", self.button_font, self.button_color, self.button_hover_color, self.button_rect)
+
+        # Update display
+        super().display()
+
+    def handle_events(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.button_rect.collidepoint(pg.mouse.get_pos()):
+                self.restart_game()
+
+    def restart_game(self):
+        # Reset the screen to the main game
+        self.game.set_screen(Screen(self.game))  # Set the main game as the active screen
+
 """class DeathScreen(BaseScreen):
     def __init__(self, game):
         super().__init__(game)
