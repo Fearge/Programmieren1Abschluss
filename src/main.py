@@ -1,46 +1,30 @@
-from lib2to3.pgen2.tokenize import group
+from constants import *
+from game import Game
+from os import path
 
-import pygame
-from game import *  # Assuming you have a Game class in the 'game' module
+from screen import StartScreen
 
-def main():
-    # Initialize Pygame
-    pygame.init()
 
-    # Set up the game window
-    screen_width, screen_height = 800, 600
-    screen = pygame.display.set_mode((screen_width, screen_height))
-    pygame.display.set_caption('Your Pygame Title')
+class Launcher(Game):
+    def __init__(self):
+        super().__init__('HUGO 2', (WIDTH, HEIGHT))
 
-    # Create an instance of the Game class
-    game = Game(screen)
+        # asset directories
+        self.img_dir = path.join(self.dir, 'assets', 'img')
+        self.map_dir = path.join(self.dir, 'assets', 'map')
 
-    # Main game loop
-    running = True
-    while running:
-        # Event handling
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    player = game.player_sprites.sprites()[0]
-                    player.attack(player.attacks[0])
+        # settings
+        self.ticks = TICKS
 
-        # Update game state
-        game.update()
 
-        # Render the game
-        game.render()
+    def start(self):
+        screen = StartScreen(self)
+        self.set_screen(screen)
 
-        # Update the display
-        pygame.display.flip()
 
-        # Control the frame rate (optional)
-        pygame.time.Clock().tick(60)  # Adjust the argument to set the desired frames per second
 
-    # Quit Pygame
-    pygame.quit()
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    launcher = Launcher()
+    launcher.start()
+    
