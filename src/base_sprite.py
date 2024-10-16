@@ -120,7 +120,7 @@ class Character(AnimatedSprite):
         self.screen.game.music.play_sound(self.hit_sound)
 
     def show_hit_particles(self):
-        particle = Particle(self.screen, self.rect.center, self.screen.particles)
+        particle = Particle(self.screen, self.rect.midbottom - vec(0,20), self.screen.particles)
         pg.transform.scale(particle.image, (self.rect.width*2, self.rect.height*2))
 
     def attack(self):
