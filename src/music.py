@@ -2,10 +2,9 @@ from os import path
 import pygame as pg
 from constants import *
 
-
+# right now unnecessary to do this OO, but might implement channels as attributes in the future to control sounds better
 class Music:
     def __init__(self):
-
         self.dir = path.dirname(__file__)
         pg.mixer.init()
 

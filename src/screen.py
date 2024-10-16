@@ -17,13 +17,19 @@ from health_bar import HealthBar
 from src.grapple import GrapplingHook
 
 
-class Screen:
+class Screen(BaseScreen):
     def __init__(self, game):
+        super().__init__(game)
         self.game = game
         self.health_bar = HealthBar(10, 10, 200, 20, HEALTH)  # Position and size of the health bar
         self.enemies_health_bars = []
         self.load()
         self.new()
+
+        #quit button
+        self.quit_button_color = (200,200,200)
+        self.hover_color = (128,128,128)
+        self.quit_button_rect = pg.Rect((self.surface.get_width() - 100, 0), (100, 50))
 
     def load(self):
         #  prepare map
@@ -59,6 +65,10 @@ class Screen:
         self.player.handle_events(e)
         for enemy in self.enemies:
             enemy.handle_events(e)
+        if e.type == pg.MOUSEBUTTONDOWN and e.button == 1:
+            if self.quit_button_rect.collidepoint(pg.mouse.get_pos()):
+                pg.quit()
+                exit()
 
 
 
@@ -78,7 +88,9 @@ class Screen:
         for enemy in self.enemies:
             enemy.health_bar.draw(self.game.surface, self.camera)
 
-        pg.display.flip()
+            # quit button
+        self.create_button("Quit", pg.font.Font(None, 40), self.quit_button_color, self.hover_color, self.quit_button_rect,128)
+        super().display()
 
     def check_collisions(self):
         # PLAYER COLLISIONS
@@ -118,12 +130,21 @@ class Screen:
         self.character_sprites.update()
         self.attacks.update()
         self.hooks.update()
-
         self.check_collisions()
         self.camera.update(self.player)
+
+        #health bar
         self.health_bar.update(self.player.health)
         if self.player.health <= 0 or self.player.pos.y > self.map.height + 100:
+            self.game.music.play_sound(HUGO_DEATH_SOUND_PATH)
             self.game.set_screen(DeathScreen(self.game))
+
+        #check if all enemies are dead
+        if not self.enemies:
+            self.game.set_screen(WinScreen(self.game))
+
+
+
 
 class StartScreen(BaseScreen):
     def __init__(self, game):
@@ -182,15 +203,15 @@ class DeathScreen(BaseScreen):
 
         # Text positions
         self.game_over_text = self.death_font.render("Game Over", True, self.game_over_color)
-        self.game_over_rect = self.game_over_text.get_rect(center=(self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
 
         # Button
-        self.button_rect = pg.Rect((self.surface.get_width() // 2, self.surface.get_height() // 1.5),(250,100))
+        self.button_rect = pg.Rect((self.surface.get_width() // 2 - 100, self.surface.get_height() // 1.5),(250,100))
 
     def run(self):
         while True:
             if not self.death_sound:
-                self.game.music.play_sound(HUGO_DEATH_SOUND_PATH)
+                self.game.music.stop_music()
+                self.game.music.play_sound(LOSE_SOUND_PATH)
                 self.death_sound = True
             self.game.events()
             self.display()
@@ -212,6 +233,7 @@ class DeathScreen(BaseScreen):
         if event.type == pg.MOUSEBUTTONDOWN:
             if self.button_rect.collidepoint(pg.mouse.get_pos()):
                 self.restart_game()
+                self.game.music.play_music(BACKGROUNDMUSIC_PATH)
 
     def restart_game(self):
         # Reset the screen to the game
@@ -224,7 +246,7 @@ class WinScreen(BaseScreen):
 
         # Colors and fonts
         self.win_font = pg.font.Font(None, 150)  # Standard pygame font for "You Win"
-        self.button_font = pg.font.Font(None, 80)  # Same font size as the "Restart" button
+        self.button_font = pg.font.Font(None, 60)  # Same font size as the "Restart" button
 
         self.win_text_color = (0, 255, 0)  # Green for "You Win"
         self.button_color = (255, 255, 255)  # White for the button
@@ -248,13 +270,13 @@ class WinScreen(BaseScreen):
 
     def display(self):
         # Background
-        self.surface.fill((0, 0, 0))  # Black background
+        self.surface.fill((100, 100, 100))  # Black background
 
         # "You Win" text
         self.draw_text("You Win", self.win_font, self.win_text_color, (self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
 
         # Button with hover effect
-        self.create_button("Restart", self.button_font, self.button_color, self.button_hover_color, self.button_rect)
+        self.create_button("Play Again", self.button_font, self.button_color, self.button_hover_color, self.button_rect)
 
         # Update display
         super().display()
@@ -267,64 +289,3 @@ class WinScreen(BaseScreen):
     def restart_game(self):
         # Reset the screen to the main game
         self.game.set_screen(Screen(self.game))  # Set the main game as the active screen
-
-"""class DeathScreen(BaseScreen):
-    def __init__(self, game):
-        super().__init__(game)
-        self.death_sound = False
-
-        # Farben und Schriftarten
-        self.font = pg.font.Font(None, 150)  # Standard pygame Schriftart für "Game Over"
-        self.button_font = pg.font.Font(None, 80)  # Gleiche Schriftgröße wie der "Start"-Button
-        self.game_over_color = (255, 0, 0)  # Rot für "Game Over"
-        self.button_color = WHITE  # Weiß für den Button
-        self.button_hover_color = (200, 200, 200)
-
-        # Textpositionen
-        self.game_over_text = self.font.render("Game Over", True, self.game_over_color)
-        self.game_over_rect = self.game_over_text.get_rect(center=(self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
-
-        # Button
-        self.button_text = self.button_font.render("Restart", True, self.button_color)
-        self.button_rect = pg.Rect(0, 0, 250, 100)  # Gleiche Button-Größe wie der "Start"-Button
-        self.button_rect.center = (self.surface.get_width() // 2, self.surface.get_height() // 1.5)
-
-    def run(self):
-        while True:
-            if not self.death_sound:
-                self.game.music.play_sound(HUGO_DEATH_SOUND_PATH)
-                self.death_sound = True
-            self.game.events()
-            self.display()
-            self.clock.tick(self.game.ticks)
-
-    def display(self):
-        # Hintergrund
-        self.surface.fill((0, 0, 0))  # Schwarzer Hintergrund
-
-        # Game Over Text
-        self.surface.blit(self.game_over_text, self.game_over_rect)
-
-        # Button mit Hover Effekt
-        mouse_pos = pg.mouse.get_pos()
-        if self.button_rect.collidepoint(mouse_pos):
-            # Button Hover
-            pg.draw.rect(self.surface, self.button_hover_color, self.button_rect)  # Grauer Button bei Hover
-        else:
-            pg.draw.rect(self.surface, self.button_color, self.button_rect)  # Weißer Button
-        button_text = self.button_font.render("Restart", True, (0, 0, 0))  # Schwarzer Text
-
-        self.surface.blit(button_text, button_text.get_rect(center=self.button_rect.center))
-
-        # Update
-        pg.display.flip()
-
-    def handle_events(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if self.button_rect.collidepoint(pg.mouse.get_pos()):
-                self.restart_game()
-
-    def restart_game(self):
-        # Hier wird der Bildschirm auf das Spiel zurückgesetzt
-        self.game.set_screen(Screen(self.game))  # Setze das Hauptspiel wieder als aktiven Bildschirm
-"""

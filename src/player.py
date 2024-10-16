@@ -81,7 +81,7 @@ class Player(Character):
         super().flip_image_on_direction()
 
     def attack(self):
-        self.character_attack = PlayerAttack(self.screen, 10, self.__str__(), self.screen.attacks)
+        self.character_attack = PlayerAttack(self.screen, PLAYER_DAMAGE, self.__str__(), self.screen.attacks)
         self.character_attack.align(self)
         self.is_attacking = True
         super().attack()

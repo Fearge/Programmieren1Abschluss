@@ -71,6 +71,7 @@ class MeleeEnemy(Enemy):
         'enemy_walking': (MELEE_ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
     }
     def __init__(self, screen, pos, *groups):
+        self.health = MELEE_ENEMY_HEALTH
         self.charge_target_pos = (0,0)
         super().__init__(screen, pos, groups)
         self.range_threshold = 200
@@ -98,7 +99,7 @@ class MeleeEnemy(Enemy):
     def attack(self): # maybe make this async
         self.charge_target_pos = vec(self.screen.player.pos)
         self.is_attacking = True
-        self.character_attack = ChargeAttack(self.screen, 10, self.__str__(), self.screen.attacks)
+        self.character_attack = ChargeAttack(self.screen, CHARGE_ATTACK_DAMAGE, self.__str__(), self.screen.attacks)
         self.character_attack.align(self)
         super().attack()
 
@@ -119,6 +120,7 @@ class RangedEnemy(Enemy):
     }
     def __init__(self, screen, pos, *groups):
         super().__init__(screen, pos, groups)
+        self.health = RANGED_ENEMY_HEALTH
         self.range_threshold = 300
         self.attack_sound = LASER_SOUND_PATH
         self.hit_sound = ENEMY_OUCH_SOUND_PATH
@@ -126,7 +128,7 @@ class RangedEnemy(Enemy):
 
     def attack(self):
         direction = self.screen.player.pos - self.pos
-        self.character_attack = ShootAttack(self.screen, self.rect.center, direction, 5,self.__str__(), self.screen.attacks)
+        self.character_attack = ShootAttack(self.screen, self.rect.center, direction, RANGE_ATTACK_DAMAGE,self.__str__(), self.screen.attacks)
         super().attack()
 
     def move(self):
@@ -142,7 +144,7 @@ class RangedEnemy(Enemy):
             if event.dict.get('enemy') == self.id and self.attack_cooldown == 0:
                 print('player near')
                 self.attack()
-                self.attack_cooldown = ENEMY_RANGED_COOLDOWN
+                self.attack_cooldown = RANGED_ENEMY_COOLDOWN
 
     def update(self):
         super().update()

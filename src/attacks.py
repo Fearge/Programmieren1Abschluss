@@ -56,7 +56,7 @@ class ShootAttack(Attack):
         self.pos = pos
         self.rect = self.image.get_rect(center=self.pos)
         self.direction = direction.normalize()
-        self.damage = ENEMY_BULLET_DAMAGE
+        self.damage = damage
 
     def animate(self):
         pass

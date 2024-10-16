@@ -156,7 +156,7 @@ class Character(AnimatedSprite):
             self.vel.x = 0
         if self.vel.y > PLAYER_MAX_FALL_SPEED:
             self.vel.y = PLAYER_MAX_FALL_SPEED
-        if self.health == 0:
+        if not self.health > 0:
             self.screen.game.music.play_sound(self.death_sound)
             self.kill()
             self.alive = False
@@ -203,14 +203,23 @@ class BaseScreen:
         self.surface = game.surface
         self.clock = pg.time.Clock()
 
-    def create_button(self, text, font, color, hover_color, rect):
+    def create_button(self, text, font, color, hover_color, rect, alpha=255):
         mouse_pos = pg.mouse.get_pos()
+        button_surface = pg.Surface(rect.size, pg.SRCALPHA)
+        button_color = hover_color if rect.collidepoint(mouse_pos) else color
+        button_surface.fill((*button_color, alpha))
+        self.surface.blit(button_surface, rect.topleft)
+
+        button_text = font.render(text, True, (0, 0, 0))  # Black text
+        self.surface.blit(button_text, button_text.get_rect(center=rect.center))
+
+        """mouse_pos = pg.mouse.get_pos()
         if rect.collidepoint(mouse_pos):
             pg.draw.rect(self.surface, hover_color, rect)
         else:
             pg.draw.rect(self.surface, color, rect)
         button_text = font.render(text, True, (0, 0, 0))  # Black text
-        self.surface.blit(button_text, button_text.get_rect(center=rect.center))
+        self.surface.blit(button_text, button_text.get_rect(center=rect.center))"""
 
     def draw_text(self, text, font, color, pos):
         text_surface = font.render(text, True, color)
