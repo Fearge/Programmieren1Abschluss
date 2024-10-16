@@ -16,6 +16,8 @@ class Enemy(Character):
         Enemy._id_counter += 1
 
         self.health_bar = HealthBar(self.pos.x, self.pos.y, 50, 10, self.health)
+        self.hit_sound = ENEMY_OUCH_SOUND_PATH
+        self.death_sound = ENEMY_DEATH_SOUND_PATH
 
         self.range_threshold = 100
         self.is_attacking = False
@@ -62,6 +64,7 @@ class Enemy(Character):
         self.health_bar.update(self.health)
         self.rect.midbottom = self.pos
 
+
 def start_event_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
@@ -75,7 +78,7 @@ class MeleeEnemy(Enemy):
         self.charge_target_pos = (0,0)
         super().__init__(screen, pos,MELEE_ENEMY_HEALTH, *groups)
         self.range_threshold = 200
-        self.attack_sound = SCREAM_SOUND_PATH
+        self.attack_sound = CHARGE_SOUND
 
     # charge attack
     def move(self):
@@ -123,8 +126,7 @@ class RangedEnemy(Enemy):
         super().__init__(screen, pos, RANGED_ENEMY_HEALTH, *groups)
         self.range_threshold = 300
         self.attack_sound = LASER_SOUND_PATH
-        self.hit_sound = ENEMY_OUCH_SOUND_PATH
-        self.death_sound = ENEMY_DEATH_SOUND_PATH
+
 
     def attack(self):
         direction = self.screen.player.pos - self.pos
