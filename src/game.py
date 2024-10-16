@@ -4,11 +4,14 @@ import sys
 
 from os import path
 
+from src.constants import *
+from src.music import Music
+
+
 class Game:
     def __init__(self, title, dim):
         # initialize pygame
         pg.init()
-        pg.mixer.init()
         pg.display.set_caption(title)
 
         self.width = dim[0]
@@ -16,12 +19,19 @@ class Game:
 
         # set screen
         self.screen = None
+        self.fullscreen = False
         self.surface = pg.display.set_mode(dim)
-        #self.surface = pg.display.set_mode(dim, pg.FULLSCREEN)
         self.clock = pg.time.Clock()
+        self.paused = False
 
         # current directory
         self.dir = path.dirname(__file__)
+
+        # load and play Music
+        self.music = Music()
+        self.music.load_music(path.join(self.dir, 'assets', 'mus', BACKGROUNDMUSIC_PATH))
+        self.music.play_music()
+
 
     def set_screen(self, scr):
         # delete existing
@@ -45,10 +55,12 @@ class Game:
         for e in pg.event.get():
             if e.type == pg.QUIT:
                 self.quit()
-            self.screen.player.handle_events(e)
+            elif e.type == pg.KEYDOWN:
+                if e.key == pg.K_ESCAPE:
+                    self.quit()
 
-            for enemy in self.screen.enemies:
-                enemy.handle_events(e)
+            self.screen.handle_events(e)
+
 
 
 

@@ -1,13 +1,21 @@
+from itertools import chain
+
 import pygame as pg
 from os import path
 
+from pygame import FULLSCREEN
+
+from constants import *
+
 from collisions import *
 from map import TiledMap, Camera
-from sprites import Obstacle, Player
-from src.enemy import MeleeEnemy
+from player import Obstacle, Player
+from src.attacks import ChargeAttack, PlayerAttack
+from src.base_sprite import BaseScreen
+from src.enemy import MeleeEnemy, Enemy, RangedEnemy
 from health_bar import HealthBar
+from src.grapple import GrapplingHook
 
-vec = pg.math.Vector2
 
 class Screen:
     def __init__(self, game):
@@ -24,54 +32,51 @@ class Screen:
 
     def new(self):
         # sprite groups
-        self.all_sprites = pg.sprite.Group()
+        self.character_sprites = pg.sprite.Group()
         self.enemies = pg.sprite.Group()
         self.obstacles = pg.sprite.Group()
         self.attacks = pg.sprite.Group()
         self.hooks = pg.sprite.Group()
+        self.particles = pg.sprite.Group()
 
 
         for obj in self.map.tmx_data.objects:
             obj_midbottom = vec(obj.x + obj.width/2, obj.y + obj.height)
             if obj.name == 'player':
-                self.player = Player(self, obj_midbottom, self.all_sprites)
+                self.player = Player(self, obj_midbottom, self.character_sprites)
             elif obj.name == 'obstacle':
                 Obstacle((obj.x, obj.y), (obj.width, obj.height), self.obstacles)
             elif obj.name == 'melee_enemy':
-                enemy = MeleeEnemy(self, obj_midbottom, self.enemies)
-                self.all_sprites.add(enemy)
+                rangedEnemy = RangedEnemy(self, obj_midbottom, self.enemies)
+                self.character_sprites.add(rangedEnemy)
+            elif obj.name == 'ranged_enemy':
+                meleeEnemy = MeleeEnemy(self, obj_midbottom, self.enemies)
+                self.character_sprites.add(meleeEnemy)
 
         self.camera = Camera(self.game, self.map.width, self.map.height)
 
-    def run(self):
-        while True:
-            self.game.clock.tick(self.game.fps)
-            self.game.events()
-            self.update()
-            self.display()
+    def handle_events(self, e):
+        self.player.handle_events(e)
+        for enemy in self.enemies:
+            enemy.handle_events(e)
 
-    def update(self):
-        self.all_sprites.update()
-        self.check_collisions()
-        self.camera.update(self.player)
-        self.health_bar.update(self.player.health)
-        if self.player.health <= 0 or self.player.pos.y > self.map.height + 100:
-            self.game.set_screen(DeathScreen(self.game))
+
 
     def display(self):
         self.game.surface.blit(self.map_img, self.camera.apply(self.map))
-        self.camera.draw(self.game.surface, self.all_sprites)
+        self.camera.draw(self.game.surface, self.character_sprites)
 
+        for particle in self.particles:
+            self.game.surface.blit(particle.image, self.camera.apply(particle))
         for attack in self.attacks:
             self.game.surface.blit(attack.image, self.camera.apply(attack))
         for hook in self.hooks:
             self.game.surface.blit(hook.image, self.camera.apply(hook))
+
         # health bars
         self.health_bar.draw(self.game.surface, None)  # Draw the health bar
-
         for enemy in self.enemies:
             enemy.health_bar.draw(self.game.surface, self.camera)
-
 
         pg.display.flip()
 
@@ -82,17 +87,14 @@ class Screen:
         if hits:
             for hit in hits:
                 collide_with_obstacles(self.player, hit)
-
-
         for enemy in self.enemies:
             hits = pg.sprite.spritecollide(enemy, self.obstacles, False)
             if hits:
                 for hit in hits:
                     collide_with_obstacles(enemy, hit)
-
         # attacks
         for attack in self.attacks:
-            hits = pg.sprite.spritecollide(attack, self.all_sprites, False)
+            hits = pg.sprite.spritecollide(attack, self.character_sprites, False)
             if hits:
                 for hit in hits:
                     attack_collision(attack, hit)
@@ -101,62 +103,130 @@ class Screen:
             if not hook.is_attached:
                 hits = pg.sprite.spritecollide(hook, self.obstacles, False)
                 if hits:
-                    hook_collision(hook)
-
-class StartScreen:
-    def __init__(self, game):
-        self.game = game
-        self.font = pg.font.Font(None, 130)  # Verwende eine Standard-Schriftart
-        self.button_font = pg.font.Font(None, 80)
-        self.button_color = (255, 255, 255)  # Weiß
-        self.hover_color = (200, 200, 200)  # Hellgrau
-        self.start_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 5 * 3), (200, 100))  # Button-Rechteck
-
-    def draw(self):
-        # Hintergrundeinstellung (z. B. schwarz)
-        self.game.surface.fill((50, 50, 50))
-
-        # Titeltext zeichnen
-        title_surface = self.font.render("Programmieren 1", True, (255, 255, 255))
-        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 5 * 2))
-        self.game.surface.blit(title_surface, title_rect)
-
-        # Startbutton zeichnen
-        button_color = self.hover_color if self.start_button_rect.collidepoint(pg.mouse.get_pos()) else self.button_color
-        pg.draw.rect(self.game.surface, button_color, self.start_button_rect)
-
-        button_text_surface = self.button_font.render("Start", True, (0, 0, 0))  # Textfarbe schwarz
-        button_text_rect = button_text_surface.get_rect(center=self.start_button_rect.center)
-        self.game.surface.blit(button_text_surface, button_text_rect)
-
-        pg.display.flip()  # Aktualisiere den Bildschirm
-
-    def handle_events(self):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                exit()
-
-            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:  # Linke Maustaste
-                if self.start_button_rect.collidepoint(pg.mouse.get_pos()):  # Überprüfen, ob der Button geklickt wurde
-                    self.game.set_screen(Screen(self.game))  # Zum Hauptspiel wechseln
+                    hook_collision(hook, self)
 
     def run(self):
         while True:
-            self.handle_events()
+            self.game.events()
+            self.update()
+            self.display()
+            self.game.clock.tick(self.game.ticks)
+
+    def update(self):
+        #update sprites
+        self.particles.update()
+        self.character_sprites.update()
+        self.attacks.update()
+        self.hooks.update()
+
+        self.check_collisions()
+        self.camera.update(self.player)
+        self.health_bar.update(self.player.health)
+        if self.player.health <= 0 or self.player.pos.y > self.map.height + 100:
+            self.game.set_screen(DeathScreen(self.game))
+
+class StartScreen(BaseScreen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.start_button_rect = pg.Rect((self.surface.get_width() // 2 - 100, self.surface.get_height() // 5 * 3),(200,100))
+        self.fullscreen_button_rect = pg.Rect((self.surface.get_width() // 2 - 100, self.surface.get_height() // 5 * 4),(200,100))
+
+        self.button_color = (255, 255, 255)
+        self.hover_color = (200, 200, 200)
+
+        self.start_button_font = pg.font.Font(None, 80)
+        self.fullscreen_button_font = pg.font.Font(None, 40)
+        self.title_font = pg.font.Font(None, 130)
+
+        self.background = pg.image.load(path.join(self.game.map_dir, 'HugoMapFinCut.png')).convert()
+
+
+    def draw(self):
+        self.game.surface.blit(self.background, (0, 0))
+        self.draw_text("HUGO 2", self.title_font, (255, 128, 40), (self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
+        self.create_button("Start", self.start_button_font, self.button_color, self.hover_color, self.start_button_rect)
+        self.create_button("Fullscreen", self.fullscreen_button_font, self.button_color, self.hover_color, self.fullscreen_button_rect)
+        self.display()
+
+    def handle_events(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if self.start_button_rect.collidepoint(pg.mouse.get_pos()):
+                self.game.set_screen(Screen(self.game))
+            elif self.fullscreen_button_rect.collidepoint(pg.mouse.get_pos()):
+                self.toggle_fullscreen()
+
+    def toggle_fullscreen(self):
+        if self.game.fullscreen:
+            pg.display.set_mode((WIDTH, HEIGHT))
+        else:
+            pg.display.set_mode((WIDTH, HEIGHT), pg.FULLSCREEN)
+        self.game.fullscreen = not self.game.fullscreen
+
+    def run(self):
+        while True:
+            self.game.events()
             self.draw()
 
-class DeathScreen:
+class DeathScreen(BaseScreen):
     def __init__(self, game):
-        self.game = game
-        self.surface = game.surface
-        self.clock = pg.time.Clock()
+        super().__init__(game)
+        self.death_sound = False
+
+        # Colors and fonts
+        self.death_font = pg.font.Font(None, 150)  # Standard pygame font for "Game Over"
+        self.button_font = pg.font.Font(None, 80)  # Same font size as the "Start" button
+
+        self.game_over_color = (255, 0, 0)  # Red for "Game Over"
+        self.button_color = (255, 255, 255)  # White for the button
+        self.button_hover_color = (200, 200, 200)
+
+        # Text positions
+        self.game_over_text = self.death_font.render("Game Over", True, self.game_over_color)
+        self.game_over_rect = self.game_over_text.get_rect(center=(self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
+
+        # Button
+        self.button_rect = pg.Rect((self.surface.get_width() // 2, self.surface.get_height() // 1.5),(250,100))
+
+    def run(self):
+        while True:
+            if not self.death_sound:
+                self.game.music.play_sound(HUGO_DEATH_SOUND_PATH)
+                self.death_sound = True
+            self.game.events()
+            self.display()
+            self.clock.tick(self.game.ticks)
+
+    def display(self):
+        # Background
+        self.surface.fill((0, 0, 0))  # Black background
+
+        # Game Over text
+        self.draw_text("Game Over", self.death_font, self.game_over_color, (self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
+        # Button with hover effect
+        self.create_button("Restart", self.button_font, self.button_color, self.button_hover_color, self.button_rect)
+
+        # Update display
+        super().display()
+
+    def handle_events(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.button_rect.collidepoint(pg.mouse.get_pos()):
+                self.restart_game()
+
+    def restart_game(self):
+        # Reset the screen to the game
+        self.game.set_screen(Screen(self.game))  # Set the main game as the active screen
+
+"""class DeathScreen(BaseScreen):
+    def __init__(self, game):
+        super().__init__(game)
+        self.death_sound = False
 
         # Farben und Schriftarten
         self.font = pg.font.Font(None, 150)  # Standard pygame Schriftart für "Game Over"
         self.button_font = pg.font.Font(None, 80)  # Gleiche Schriftgröße wie der "Start"-Button
         self.game_over_color = (255, 0, 0)  # Rot für "Game Over"
-        self.button_color = (255, 255, 255)  # Weiß für den Button
+        self.button_color = WHITE  # Weiß für den Button
         self.button_hover_color = (200, 200, 200)
 
         # Textpositionen
@@ -170,9 +240,12 @@ class DeathScreen:
 
     def run(self):
         while True:
-            self.handle_events()
+            if not self.death_sound:
+                self.game.music.play_sound(HUGO_DEATH_SOUND_PATH)
+                self.death_sound = True
+            self.game.events()
             self.display()
-            self.clock.tick(self.game.fps)
+            self.clock.tick(self.game.ticks)
 
     def display(self):
         # Hintergrund
@@ -186,26 +259,21 @@ class DeathScreen:
         if self.button_rect.collidepoint(mouse_pos):
             # Button Hover
             pg.draw.rect(self.surface, self.button_hover_color, self.button_rect)  # Grauer Button bei Hover
-            button_text = self.button_font.render("Restart", True, (0, 0, 0))  # Schwarzer Text bei Hover
         else:
             pg.draw.rect(self.surface, self.button_color, self.button_rect)  # Weißer Button
-            button_text = self.button_font.render("Restart", True, (0, 0, 0))  # Schwarzer Text
+        button_text = self.button_font.render("Restart", True, (0, 0, 0))  # Schwarzer Text
 
         self.surface.blit(button_text, button_text.get_rect(center=self.button_rect.center))
 
         # Update
         pg.display.flip()
 
-    def handle_events(self):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                quit()
-
-            elif event.type == pg.MOUSEBUTTONDOWN:
-                if self.button_rect.collidepoint(pg.mouse.get_pos()):
-                    self.restart_game()
+    def handle_events(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.button_rect.collidepoint(pg.mouse.get_pos()):
+                self.restart_game()
 
     def restart_game(self):
         # Hier wird der Bildschirm auf das Spiel zurückgesetzt
         self.game.set_screen(Screen(self.game))  # Setze das Hauptspiel wieder als aktiven Bildschirm
+"""

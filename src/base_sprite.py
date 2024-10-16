@@ -1,14 +1,17 @@
 import pygame as pg
+from pygame.examples.cursors import image
+
 from constants import *
-from src.spritesheet import Spritesheet
+from src import Sprite
+from src.spritesheet import Spritesheet, Animation
 from os import path
 
 vec = pg.math.Vector2
 
 
-class AnimatedSprite(pg.sprite.Sprite):
+class AnimatedSprite(Sprite):
     #COLORKEY = (255,255,255)
-    COLORKEY = (34, 177, 76)
+    COLORKEY = COLORKEY
     ANIMATIONS = {}
 
     def __init__(self,screen, *groups):
@@ -22,6 +25,7 @@ class AnimatedSprite(pg.sprite.Sprite):
         self.animation_storage = {}
         self.transitions = {}
 
+        self.spritesheet = Spritesheet(path.join(self.screen.game.img_dir, SPRITESHEET_PATH), colorkey=self.COLORKEY)
         self.load()
         self.image = self.active_anim.get_frame(0)
         self.rect = self.image.get_rect()
@@ -48,9 +52,8 @@ class AnimatedSprite(pg.sprite.Sprite):
         self.elapsed_time = 0
 
     def load(self):
-        spritesheet = Spritesheet(path.join(self.screen.game.img_dir, SPRITESHEET_PATH), colorkey=self.COLORKEY)
         for name, (frames, duration, mode) in self.ANIMATIONS.items():
-            anim = spritesheet.get_animation(frames, duration, mode, scale=0.5)
+            anim = self.spritesheet.get_animation(frames, duration, mode, scale=0.5)
             self.store_animation(name, anim)
 
     def animate(self):
@@ -66,12 +69,14 @@ class AnimatedSprite(pg.sprite.Sprite):
         return self.active_anim.is_animation_finished(self.elapsed_time)
 
     def update(self):
-        self.elapsed_time += 1/self.screen.game.fps
+        self.elapsed_time += 1/self.screen.game.ticks
         self.animate()
 
 
 class Character(AnimatedSprite):
-
+    ANIMATIONS = {
+        'hit': (HIT_PARTICLES, 0.6, Animation.NORMAL),
+    }
     def __init__(self, screen, pos,  *groups):
         super().__init__(screen,groups)
 
@@ -82,6 +87,16 @@ class Character(AnimatedSprite):
         self.character_attack = None
         self.is_attacking = False
         self.attack_cooldown = 0
+        self.sprite_type = 'character'
+
+        #hit particles
+        self.particles_duration = 0.5
+        self.particles_elapsed_time = 0
+
+        #music
+        self.attack_sound = None
+        self.hit_sound = None
+        self.death_sound = None
 
         # physics
         self.ground_count = 0
@@ -101,6 +116,15 @@ class Character(AnimatedSprite):
 
     def get_hit(self, damage):
         self.health -= damage
+        self.show_hit_particles()
+        self.screen.game.music.play_sound(self.hit_sound)
+
+    def show_hit_particles(self):
+        particle = Particle(self.screen, self.rect.center, self.screen.particles)
+        pg.transform.scale(particle.image, (self.rect.width*2, self.rect.height*2))
+
+    def attack(self):
+        self.screen.game.music.play_sound(self.attack_sound)
 
     def animate(self):
         super().animate()
@@ -113,11 +137,11 @@ class Character(AnimatedSprite):
     def is_attack_finished(self):
         pass
 
+
+
     def update(self):
         super().update()
-
         # apply gravity
-        # self.acc = vec(0, 0)
         self.acc = vec(0, GRAVITY)
         # movement
         self.move()
@@ -130,32 +154,70 @@ class Character(AnimatedSprite):
 
         if abs(self.vel.x) < 0.5:
             self.vel.x = 0
-
-        if self.vel.y > 10:
-            self.vel.y = 10
-
+        if self.vel.y > PLAYER_MAX_FALL_SPEED:
+            self.vel.y = PLAYER_MAX_FALL_SPEED
         if self.health == 0:
+            self.screen.game.music.play_sound(self.death_sound)
             self.kill()
             self.alive = False
+
 
         #attack handling
         if self.is_attacking:
             if self.is_attack_finished():
                 self.is_attacking = False
-                if self.character_attack:
-                    self.character_attack.kill()
-                    self.character_attack = None
-            elif self.character_attack:
-                self.character_attack.update()
-                self.character_attack.align(self) # good enough for now, mb has to be reworked for ranged attacks
-
-        else:
-            if self.character_attack: #additional check to kill attack (if bug occurs)
                 self.character_attack.kill()
                 self.character_attack = None
-
+                self.screen.game.music.stop_sound(self.attack_sound)
+            elif self.character_attack:
+                self.character_attack.align(self) # good enough for now, mb has to be reworked for ranged attacks
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
+        if self.particles_duration > self.particles_elapsed_time:
+            self.particles_elapsed_time += 1/self.screen.game.ticks
 
         self.rect.midbottom = self.pos
+
+class Particle(AnimatedSprite):
+    ANIMATIONS = {
+        'particle': (HIT_PARTICLES, 0.6, Animation.NORMAL),
+    }
+    def __init__(self, screen, pos, *groups):
+        super().__init__(screen, groups)
+        self.pos = vec(pos)
+        self.sprite_type = 'particle'
+        self.rect.midbottom = self.pos
+        self.duration = 0.5
+
+    def update(self):
+        self.elapsed_time += 1/self.screen.game.ticks
+        if self.elapsed_time >= self.duration:
+            self.kill()
+
+
+import pygame as pg
+
+class BaseScreen:
+    def __init__(self, game):
+        self.game = game
+        self.surface = game.surface
+        self.clock = pg.time.Clock()
+
+    def create_button(self, text, font, color, hover_color, rect):
+        mouse_pos = pg.mouse.get_pos()
+        if rect.collidepoint(mouse_pos):
+            pg.draw.rect(self.surface, hover_color, rect)
+        else:
+            pg.draw.rect(self.surface, color, rect)
+        button_text = font.render(text, True, (0, 0, 0))  # Black text
+        self.surface.blit(button_text, button_text.get_rect(center=rect.center))
+
+    def draw_text(self, text, font, color, pos):
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect(center=pos)
+        self.surface.blit(text_surface, text_rect)
+
+    def display(self):
+        pg.display.flip()
+
 

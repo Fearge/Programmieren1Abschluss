@@ -1,5 +1,8 @@
 import pygame as pg
 from pygame.math import Vector2 as vec
+from src.constants import HIT_PARTICLES
+from src.spritesheet import Animation
+
 
 class GrapplingHook(pg.sprite.Sprite):
     def __init__(self, pos, *groups):
@@ -9,6 +12,7 @@ class GrapplingHook(pg.sprite.Sprite):
         self.is_shooting = False
         self.is_attached = False
         self.path = []
+        self.sprite_type = 'grappling_hook'
         self.image = pg.Surface((10, 10))
         self.rect = pg.Rect(pos, (10, 10))  # Example size, adjust as needed
         self.rect.midbottom = self.pos
@@ -19,6 +23,6 @@ class GrapplingHook(pg.sprite.Sprite):
 
     def update(self):
         self.pos += self.vel
-        self.rect.midbottom = self.pos
         if self.is_shooting and not self.is_attached:
             self.path.append(self.pos)
+        self.rect.midbottom = self.pos

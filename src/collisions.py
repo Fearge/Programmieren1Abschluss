@@ -1,9 +1,7 @@
-from constants import *
+
 from src.attacks import Attack
-from src.base_sprite import Character
-from src.screen import vec
-
-
+from src.base_sprite import Character, vec
+from constants import *
 def collide_with_obstacles(character, hit):
     # character's bottom and obstacle top
     if abs(hit.rect.top - character.rect.bottom) < COLLISION_TOLERANCE:
@@ -33,13 +31,13 @@ def collide_with_obstacles(character, hit):
         return
 
 
-def attack_collision(attack: Attack, hit: Character):
-    if attack.entity_id != hit.__str__() and attack.has_hit == False:
-        print(hit.health)
-        hit.health -= attack.damage
-        print(hit.health)
+def attack_collision(attack: Attack, character: Character):
+    if attack.entity_id != character.__str__() and attack.has_hit == False:
+        character.get_hit(attack.damage)
         attack.has_hit = True
+        attack.kill()
 
-def hook_collision(hook):
+def hook_collision(hook, screen):
     hook.vel = vec(0, 0)
     hook.is_attached = True
+    screen.game.music.play_sound(GRAPPLE_CONNECT_SOUND_PATH)

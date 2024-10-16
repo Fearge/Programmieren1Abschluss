@@ -13,6 +13,8 @@ class Attack(AnimatedSprite):
         self.entity_id = entity_id
         self.__attack_duration = 0
         self.has_hit = False
+        self.sprite_type = 'attack'
+        self.direction = 'R'
 
         self.rect.midbottom = self.pos
 
@@ -21,16 +23,17 @@ class Attack(AnimatedSprite):
         return self.__attack_duration
 
     def align(self, entity: Character):
+        self.direction = entity.direction
         offset = vec(entity.rect.width/2, -entity.rect.height/2) if entity.direction == 'R' else vec(-entity.rect.width/2, -entity.rect.height/2)
         self.pos = entity.pos + offset
-        self.image = pg.transform.flip(self.active_anim.get_frame(self.elapsed_time), False, True) # image is wrong way around in spritesheet
-        if entity.direction == 'L':
-            self.image = pg.transform.flip(self.image, True, False)
+
 
     def update(self):
         super().update()
         self.__attack_duration += 1
         self.rect.midbottom = self.pos
+        if self.direction == 'L':
+            self.image = pg.transform.flip(self.image, True, False)
 
 
 
@@ -41,10 +44,28 @@ class PlayerAttack(Attack):
     def __init__(self, screen, damage, entity_id, *groups):
         super().__init__(screen, damage, entity_id, *groups)
 
-
-
-
 class ChargeAttack(Attack):
     def __init__(self, screen, damage, entity_id, *groups):
         super().__init__(screen, damage, entity_id, *groups)
+
+class ShootAttack(Attack):
+    def __init__(self, screen,pos, direction, damage, entity_id, *groups):
+        super().__init__(screen, damage, entity_id, *groups)
+        self.image = pg.Surface((10,10))
+        self.image.fill(pg.Color('red'))
+        self.pos = pos
+        self.rect = self.image.get_rect(center=self.pos)
+        self.direction = direction.normalize()
+        self.damage = ENEMY_BULLET_DAMAGE
+
+    def animate(self):
+        pass
+
+    def align(self, entity: Character):# no need do do alignment
+        pass
+
+    def update(self):
+        self.pos += self.direction * ENEMY_BULLET_SPEED
+        self.rect.center = self.pos
+        super().update()
 
