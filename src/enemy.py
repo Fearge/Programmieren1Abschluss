@@ -8,8 +8,8 @@ import asyncio
 class Enemy(Character):
     # implement colorkey if needed, standard: (34, 177, 76)
     _id_counter = 0
-    def __init__(self, screen, pos, *groups):
-        super().__init__(screen, pos,groups)
+    def __init__(self, screen, pos,health, *groups):
+        super().__init__(screen, pos,health, *groups)
         # properties
         self.prev_pos = vec(pos)
         self.id = Enemy._id_counter # for identification of enemy instances
@@ -73,7 +73,7 @@ class MeleeEnemy(Enemy):
     def __init__(self, screen, pos, *groups):
         self.health = MELEE_ENEMY_HEALTH
         self.charge_target_pos = (0,0)
-        super().__init__(screen, pos, groups)
+        super().__init__(screen, pos,MELEE_ENEMY_HEALTH, *groups)
         self.range_threshold = 200
         self.attack_sound = SCREAM_SOUND_PATH
 
@@ -119,8 +119,8 @@ class RangedEnemy(Enemy):
         'enemy_walking': (RANGED_ENEMY_WALKING_FRAMES, 0.6, Animation.LOOP),
     }
     def __init__(self, screen, pos, *groups):
-        super().__init__(screen, pos, groups)
         self.health = RANGED_ENEMY_HEALTH
+        super().__init__(screen, pos, RANGED_ENEMY_HEALTH, *groups)
         self.range_threshold = 300
         self.attack_sound = LASER_SOUND_PATH
         self.hit_sound = ENEMY_OUCH_SOUND_PATH

@@ -21,7 +21,7 @@ class Player(Character):
     }
     _id_counter = 0
     def __init__(self, screen, pos, *groups):
-        super().__init__(screen,pos, groups)
+        super().__init__(screen, pos, PLAYER_HEALTH, *groups)
         # properties
         self.jump_release = 0
         self.attack_cooldown = 0

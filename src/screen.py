@@ -21,15 +21,12 @@ class Screen(BaseScreen):
     def __init__(self, game):
         super().__init__(game)
         self.game = game
-        self.health_bar = HealthBar(10, 10, 200, 20, HEALTH)  # Position and size of the health bar
+        self.health_bar = HealthBar(10, 10, 200, 20, PLAYER_HEALTH)  # Position and size of the health bar
         self.enemies_health_bars = []
         self.load()
         self.new()
 
-        #quit button
-        self.quit_button_color = (200,200,200)
-        self.hover_color = (128,128,128)
-        self.quit_button_rect = pg.Rect((self.surface.get_width() - 100, 0), (100, 50))
+
 
     def load(self):
         #  prepare map
@@ -65,10 +62,6 @@ class Screen(BaseScreen):
         self.player.handle_events(e)
         for enemy in self.enemies:
             enemy.handle_events(e)
-        if e.type == pg.MOUSEBUTTONDOWN and e.button == 1:
-            if self.quit_button_rect.collidepoint(pg.mouse.get_pos()):
-                pg.quit()
-                exit()
 
 
 
@@ -88,8 +81,6 @@ class Screen(BaseScreen):
         for enemy in self.enemies:
             enemy.health_bar.draw(self.game.surface, self.camera)
 
-            # quit button
-        self.create_button("Quit", pg.font.Font(None, 40), self.quit_button_color, self.hover_color, self.quit_button_rect,128)
         super().display()
 
     def check_collisions(self):
@@ -118,11 +109,7 @@ class Screen(BaseScreen):
                     hook_collision(hook, self)
 
     def run(self):
-        while True:
-            self.game.events()
-            self.update()
-            self.display()
-            self.game.clock.tick(self.game.ticks)
+        super().run()
 
     def update(self):
         #update sprites
@@ -160,21 +147,25 @@ class StartScreen(BaseScreen):
         self.title_font = pg.font.Font(None, 130)
 
         self.background = pg.image.load(path.join(self.game.map_dir, 'HugoMapFinCut.png')).convert()
+        if not self.game.music.is_music_playing:
+            self.game.music.load_music(path.join(self.game.map_dir, BACKGROUNDMUSIC_PATH))
+            self.game.music.play_music()
 
 
-    def draw(self):
+    def display(self):
         self.game.surface.blit(self.background, (0, 0))
         self.draw_text("HUGO 2", self.title_font, (255, 128, 40), (self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
         self.create_button("Start", self.start_button_font, self.button_color, self.hover_color, self.start_button_rect)
         self.create_button("Fullscreen", self.fullscreen_button_font, self.button_color, self.hover_color, self.fullscreen_button_rect)
-        self.display()
+        super().display()
 
-    def handle_events(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+    def handle_events(self, e):
+        if e.type == pg.MOUSEBUTTONDOWN and e.button == 1:
             if self.start_button_rect.collidepoint(pg.mouse.get_pos()):
                 self.game.set_screen(Screen(self.game))
             elif self.fullscreen_button_rect.collidepoint(pg.mouse.get_pos()):
                 self.toggle_fullscreen()
+        super().handle_events(e)
 
     def toggle_fullscreen(self):
         if self.game.fullscreen:
@@ -182,11 +173,6 @@ class StartScreen(BaseScreen):
         else:
             pg.display.set_mode((WIDTH, HEIGHT), pg.FULLSCREEN)
         self.game.fullscreen = not self.game.fullscreen
-
-    def run(self):
-        while True:
-            self.game.events()
-            self.draw()
 
 class DeathScreen(BaseScreen):
     def __init__(self, game):
@@ -207,15 +193,11 @@ class DeathScreen(BaseScreen):
         # Button
         self.button_rect = pg.Rect((self.surface.get_width() // 2 - 100, self.surface.get_height() // 1.5),(250,100))
 
-    def run(self):
-        while True:
-            if not self.death_sound:
-                self.game.music.stop_music()
-                self.game.music.play_sound(LOSE_SOUND_PATH)
-                self.death_sound = True
-            self.game.events()
-            self.display()
-            self.clock.tick(self.game.ticks)
+    def update(self):
+        if not self.death_sound:
+            self.game.music.stop_music()
+            self.game.music.play_sound(LOSE_SOUND_PATH)
+            self.death_sound = True
 
     def display(self):
         # Background
@@ -229,15 +211,15 @@ class DeathScreen(BaseScreen):
         # Update display
         super().display()
 
-    def handle_events(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
+    def handle_events(self, e):
+        if e.type == pg.MOUSEBUTTONDOWN:
             if self.button_rect.collidepoint(pg.mouse.get_pos()):
                 self.restart_game()
-                self.game.music.play_music(BACKGROUNDMUSIC_PATH)
+        super().handle_events(e)
 
     def restart_game(self):
         # Reset the screen to the game
-        self.game.set_screen(Screen(self.game))  # Set the main game as the active screen
+        self.game.set_screen(StartScreen(self.game))  # Set the main game as the active screen
 
 class WinScreen(BaseScreen):
     def __init__(self, game):
@@ -259,15 +241,10 @@ class WinScreen(BaseScreen):
         # Button
         self.button_rect = pg.Rect((self.surface.get_width() // 2 - 125, self.surface.get_height() // 1.5), (250, 100))
 
-    def run(self):
-        while True:
-            if not self.win_sound:
-                self.game.music.play_sound(WIN_SOUND_PATH)  # Plays a winning sound effect
-                self.win_sound = True
-            self.game.events()  # Handles events
-            self.display()  # Updates the screen display
-            self.clock.tick(self.game.ticks)
-
+    def update(self):
+        if not self.win_sound:
+            self.game.music.play_sound(WIN_SOUND_PATH)  # Plays a winning sound effect
+            self.win_sound = True
     def display(self):
         # Background
         self.surface.fill((100, 100, 100))  # Black background
@@ -281,11 +258,13 @@ class WinScreen(BaseScreen):
         # Update display
         super().display()
 
-    def handle_events(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
+    def handle_events(self, e):
+        if e.type == pg.MOUSEBUTTONDOWN:
             if self.button_rect.collidepoint(pg.mouse.get_pos()):
                 self.restart_game()
+        super().handle_events(e)
 
     def restart_game(self):
         # Reset the screen to the main game
-        self.game.set_screen(Screen(self.game))  # Set the main game as the active screen
+        self.game.music.stop_music()
+        self.game.set_screen(StartScreen(self.game))  # Set the main game as the active screen

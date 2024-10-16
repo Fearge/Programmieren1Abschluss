@@ -77,11 +77,11 @@ class Character(AnimatedSprite):
     ANIMATIONS = {
         'hit': (HIT_PARTICLES, 0.6, Animation.NORMAL),
     }
-    def __init__(self, screen, pos,  *groups):
-        super().__init__(screen,groups)
+    def __init__(self, screen, pos,health,*groups):
+        super().__init__(screen,*groups)
 
         # properties
-        self.health = HEALTH
+        self.health = health
         self.direction = 'R'
         self.alive = True
         self.character_attack = None
@@ -203,6 +203,11 @@ class BaseScreen:
         self.surface = game.surface
         self.clock = pg.time.Clock()
 
+        # quit button
+        self.quit_button_color = (200, 200, 200)
+        self.quit_hover_color = (128, 128, 128)
+        self.quit_button_rect = pg.Rect((self.surface.get_width() - 100, 0), (100, 50))
+
     def create_button(self, text, font, color, hover_color, rect, alpha=255):
         mouse_pos = pg.mouse.get_pos()
         button_surface = pg.Surface(rect.size, pg.SRCALPHA)
@@ -213,20 +218,35 @@ class BaseScreen:
         button_text = font.render(text, True, (0, 0, 0))  # Black text
         self.surface.blit(button_text, button_text.get_rect(center=rect.center))
 
-        """mouse_pos = pg.mouse.get_pos()
-        if rect.collidepoint(mouse_pos):
-            pg.draw.rect(self.surface, hover_color, rect)
-        else:
-            pg.draw.rect(self.surface, color, rect)
-        button_text = font.render(text, True, (0, 0, 0))  # Black text
-        self.surface.blit(button_text, button_text.get_rect(center=rect.center))"""
 
     def draw_text(self, text, font, color, pos):
         text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect(center=pos)
         self.surface.blit(text_surface, text_rect)
 
+    def handle_events(self,e):
+        if e.type == pg.MOUSEBUTTONDOWN and e.button == 1:
+            if self.quit_button_rect.collidepoint(pg.mouse.get_pos()):
+                pg.quit()
+                exit()
+
     def display(self):
+        # quit button
+        self.create_button("Quit", pg.font.Font(None, 40), self.quit_button_color, self.quit_hover_color,self.quit_button_rect, 128)
+
         pg.display.flip()
+
+    def restart_game(self):
+        pass
+
+    def update(self):
+        pass
+
+    def run(self):
+        while True:
+            self.game.events()
+            self.update()
+            self.display()
+            self.game.clock.tick(self.game.ticks)
 
 
