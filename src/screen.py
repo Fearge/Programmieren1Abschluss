@@ -185,7 +185,7 @@ class DeathScreen(BaseScreen):
         self.game_over_rect = self.game_over_text.get_rect(center=(self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
 
         # Button
-        self.button_rect = pg.Rect((self.surface.get_width() // 2, self.surface.get_height() // 1.5),(250,100))
+        self.button_rect = pg.Rect((self.surface.get_width() // 2.5, self.surface.get_height() // 1.5),(250,100))
 
     def run(self):
         while True:
