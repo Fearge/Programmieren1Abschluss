@@ -1,4 +1,0 @@
-TODOS (Mario):
-- Attack Abfrage + Damage !!!
-- RangedEnemy implementieren !
-- Boss implementieren !
