@@ -109,7 +109,6 @@ class MeleeEnemy(Enemy):
     def handle_events(self, event):
         if event.type == pg.USEREVENT:
             if event.dict.get('enemy') == self.id and self.attack_cooldown == 0:
-                print('player near')
                 self.attack()
                 self.is_attacking = True
                 self.attack_cooldown = ENEMY_CHARGE_COOLDOWN  # Cooldown period before the next attack
