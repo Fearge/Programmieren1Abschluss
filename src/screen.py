@@ -49,10 +49,10 @@ class Screen(BaseScreen):
                 self.player = Player(self, obj_midbottom, self.character_sprites)
             elif obj.name == 'obstacle':
                 Obstacle((obj.x, obj.y), (obj.width, obj.height), self.obstacles)
-            elif obj.name == 'melee_enemy':
+            elif obj.name == 'ranged_enemy':
                 rangedEnemy = RangedEnemy(self, obj_midbottom, self.enemies)
                 self.character_sprites.add(rangedEnemy)
-            elif obj.name == 'ranged_enemy':
+            elif obj.name == 'melee_enemy':
                 meleeEnemy = MeleeEnemy(self, obj_midbottom, self.enemies)
                 self.character_sprites.add(meleeEnemy)
 
@@ -62,6 +62,7 @@ class Screen(BaseScreen):
         self.player.handle_events(e)
         for enemy in self.enemies:
             enemy.handle_events(e)
+        super().handle_events(e)
 
 
 
@@ -178,7 +179,6 @@ class DeathScreen(BaseScreen):
     def __init__(self, game):
         super().__init__(game)
         self.death_sound = False
-
         # Colors and fonts
         self.death_font = pg.font.Font(None, 150)  # Standard pygame font for "Game Over"
         self.button_font = pg.font.Font(None, 80)  # Same font size as the "Start" button
@@ -186,10 +186,8 @@ class DeathScreen(BaseScreen):
         self.game_over_color = (255, 0, 0)  # Red for "Game Over"
         self.button_color = (255, 255, 255)  # White for the button
         self.button_hover_color = (200, 200, 200)
-
         # Text positions
         self.game_over_text = self.death_font.render("Game Over", True, self.game_over_color)
-
         # Button
         self.button_rect = pg.Rect((self.surface.get_width() // 2 - 100, self.surface.get_height() // 1.5),(250,100))
 
@@ -202,12 +200,10 @@ class DeathScreen(BaseScreen):
     def display(self):
         # Background
         self.surface.fill((0, 0, 0))  # Black background
-
         # Game Over text
         self.draw_text("Game Over", self.death_font, self.game_over_color, (self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
         # Button with hover effect
         self.create_button("Restart", self.button_font, self.button_color, self.button_hover_color, self.button_rect)
-
         # Update display
         super().display()
 
