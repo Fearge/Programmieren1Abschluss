@@ -11,6 +11,7 @@ from collisions import *
 from map import TiledMap, Camera
 from player import Obstacle, Player
 from src.attacks import ChargeAttack, PlayerAttack
+from src.base_sprite import BaseScreen
 from src.enemy import MeleeEnemy, Enemy, RangedEnemy
 from health_bar import HealthBar
 from src.grapple import GrapplingHook
@@ -124,47 +125,35 @@ class Screen:
         if self.player.health <= 0 or self.player.pos.y > self.map.height + 100:
             self.game.set_screen(DeathScreen(self.game))
 
-
-
-
-class StartScreen:
+class StartScreen(BaseScreen):
     def __init__(self, game):
-        self.game = game
-        self.font = pg.font.Font(None, 130)  # Verwende eine Standard-Schriftart
+        super().__init__(game)
+        self.start_button_rect = pg.Rect((self.surface.get_width() // 2 - 100, self.surface.get_height() // 5 * 3),(200,100))
+        self.fullscreen_button_rect = pg.Rect((self.surface.get_width() // 2 - 100, self.surface.get_height() // 5 * 4),(200,100))
+
+        self.button_color = (255, 255, 255)
+        self.hover_color = (200, 200, 200)
+
         self.start_button_font = pg.font.Font(None, 80)
         self.fullscreen_button_font = pg.font.Font(None, 40)
-        self.button_color = (255, 255, 255)  # Weiß
-        self.hover_color = (200, 200, 200)  # Hellgrau
-        self.start_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 5 * 3), (200, 100))  # Button-Rechteck
-        self.fullscreen_button_rect = pg.Rect((WIDTH // 2 - 100, HEIGHT // 5 * 4), (200, 100))  # Fullscreen button rectangle
+        self.title_font = pg.font.Font(None, 130)
 
         self.background = pg.image.load(path.join(self.game.map_dir, 'HugoMapFinCut.png')).convert()
 
+
     def draw(self):
-        # Hintergrundeinstellung (z. B. schwarz)
         self.game.surface.blit(self.background, (0, 0))
-        # Titeltext zeichnen
-        title_surface = self.font.render("HUGO 2", True, (255, 128, 40))
-        title_rect = title_surface.get_rect(center=(WIDTH // 2, HEIGHT // 5 * 2))
-        self.game.surface.blit(title_surface, title_rect)
+        self.draw_text("HUGO 2", self.title_font, (255, 128, 40), (self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
+        self.create_button("Start", self.start_button_font, self.button_color, self.hover_color, self.start_button_rect)
+        self.create_button("Fullscreen", self.fullscreen_button_font, self.button_color, self.hover_color, self.fullscreen_button_rect)
+        self.display()
 
-        # Startbutton zeichnen
-        button_color = self.hover_color if self.start_button_rect.collidepoint(pg.mouse.get_pos()) else self.button_color
-        pg.draw.rect(self.game.surface, button_color, self.start_button_rect)
-
-        button_text_surface = self.start_button_font.render("Start", True, (0, 0, 0))  # Textfarbe schwarz
-        button_text_rect = button_text_surface.get_rect(center=self.start_button_rect.center)
-        self.game.surface.blit(button_text_surface, button_text_rect)
-
-        # Draw fullscreen toggle button
-        button_color = self.hover_color if self.fullscreen_button_rect.collidepoint(pg.mouse.get_pos()) else self.button_color
-        pg.draw.rect(self.game.surface, button_color, self.fullscreen_button_rect)
-
-        button_text_surface = self.fullscreen_button_font.render("Fullscreen", True, (0, 0, 0))  # Black text
-        button_text_rect = button_text_surface.get_rect(center=self.fullscreen_button_rect.center)
-        self.game.surface.blit(button_text_surface, button_text_rect)
-
-        pg.display.flip()  # Aktualisiere den Bildschirm
+    def handle_events(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if self.start_button_rect.collidepoint(pg.mouse.get_pos()):
+                self.game.set_screen(Screen(self.game))
+            elif self.fullscreen_button_rect.collidepoint(pg.mouse.get_pos()):
+                self.toggle_fullscreen()
 
     def toggle_fullscreen(self):
         if self.game.fullscreen:
@@ -173,23 +162,64 @@ class StartScreen:
             pg.display.set_mode((WIDTH, HEIGHT), pg.FULLSCREEN)
         self.game.fullscreen = not self.game.fullscreen
 
-    def handle_events(self, event):
-            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:  # Linke Maustaste
-                if self.start_button_rect.collidepoint(pg.mouse.get_pos()):  # Überprüfen, ob der Button geklickt wurde
-                    self.game.set_screen(Screen(self.game))  # Zum Hauptspiel wechseln
-                elif self.fullscreen_button_rect.collidepoint(pg.mouse.get_pos()):  # Check if the fullscreen button was clicked
-                    self.toggle_fullscreen()
     def run(self):
         while True:
             self.game.events()
             self.draw()
 
-
-class DeathScreen:
+class DeathScreen(BaseScreen):
     def __init__(self, game):
-        self.game = game
-        self.surface = game.surface
-        self.clock = pg.time.Clock()
+        super().__init__(game)
+        self.death_sound = False
+
+        # Colors and fonts
+        self.death_font = pg.font.Font(None, 150)  # Standard pygame font for "Game Over"
+        self.button_font = pg.font.Font(None, 80)  # Same font size as the "Start" button
+
+        self.game_over_color = (255, 0, 0)  # Red for "Game Over"
+        self.button_color = (255, 255, 255)  # White for the button
+        self.button_hover_color = (200, 200, 200)
+
+        # Text positions
+        self.game_over_text = self.death_font.render("Game Over", True, self.game_over_color)
+        self.game_over_rect = self.game_over_text.get_rect(center=(self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
+
+        # Button
+        self.button_rect = pg.Rect((self.surface.get_width() // 2, self.surface.get_height() // 1.5),(250,100))
+
+    def run(self):
+        while True:
+            if not self.death_sound:
+                self.game.music.play_sound(HUGO_DEATH_SOUND_PATH)
+                self.death_sound = True
+            self.game.events()
+            self.display()
+            self.clock.tick(self.game.ticks)
+
+    def display(self):
+        # Background
+        self.surface.fill((0, 0, 0))  # Black background
+
+        # Game Over text
+        self.draw_text("Game Over", self.death_font, self.game_over_color, (self.surface.get_width() // 2, self.surface.get_height() // 5 * 2))
+        # Button with hover effect
+        self.create_button("Restart", self.button_font, self.button_color, self.button_hover_color, self.button_rect)
+
+        # Update display
+        super().display()
+
+    def handle_events(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.button_rect.collidepoint(pg.mouse.get_pos()):
+                self.restart_game()
+
+    def restart_game(self):
+        # Reset the screen to the game
+        self.game.set_screen(Screen(self.game))  # Set the main game as the active screen
+
+"""class DeathScreen(BaseScreen):
+    def __init__(self, game):
+        super().__init__(game)
         self.death_sound = False
 
         # Farben und Schriftarten
@@ -246,3 +276,4 @@ class DeathScreen:
     def restart_game(self):
         # Hier wird der Bildschirm auf das Spiel zurückgesetzt
         self.game.set_screen(Screen(self.game))  # Setze das Hauptspiel wieder als aktiven Bildschirm
+"""

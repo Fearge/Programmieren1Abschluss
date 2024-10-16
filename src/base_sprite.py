@@ -193,3 +193,31 @@ class Particle(AnimatedSprite):
         self.elapsed_time += 1/self.screen.game.ticks
         if self.elapsed_time >= self.duration:
             self.kill()
+
+
+import pygame as pg
+
+class BaseScreen:
+    def __init__(self, game):
+        self.game = game
+        self.surface = game.surface
+        self.clock = pg.time.Clock()
+
+    def create_button(self, text, font, color, hover_color, rect):
+        mouse_pos = pg.mouse.get_pos()
+        if rect.collidepoint(mouse_pos):
+            pg.draw.rect(self.surface, hover_color, rect)
+        else:
+            pg.draw.rect(self.surface, color, rect)
+        button_text = font.render(text, True, (0, 0, 0))  # Black text
+        self.surface.blit(button_text, button_text.get_rect(center=rect.center))
+
+    def draw_text(self, text, font, color, pos):
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect(center=pos)
+        self.surface.blit(text_surface, text_rect)
+
+    def display(self):
+        pg.display.flip()
+
+
